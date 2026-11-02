@@ -1,586 +1,954 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SAMP S24 Ultra - Nova Era Roleplay</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
-    body { background: transparent; width: 100vw; height: 100vh; overflow: hidden; display: flex; justify-content: flex-end; align-items: center; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAMP S24 Ultra - Carioca Roleplay</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
+  :root { --red: #e10600; --red2: #ff3b30; --black: #0b0b0d; --dark: #17171b; --hh: 78px; }
+  body { background: transparent; width: 100vw; height: 100vh; overflow: hidden; display: flex; justify-content: flex-end; align-items: center; user-select: none; }
+  input, textarea { user-select: text; }
+  button { font-family: inherit; }
 
-    /* Estrutura do Celular */
-    .phone-chassis {
-      transform: scale(0.42); transform-origin: center right; margin-right: 18vw;
-      width: 390px; height: 805px;
-      background: linear-gradient(135deg, #484058, #1c1825, #2d2639);
-      border-radius: 54px; padding: 12px;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 0 2px #6b6183, inset 0 0 12px rgba(255, 255, 255, 0.15);
-      position: relative;
-    }
+  /* ===== Chassi ===== */
+  .phone-chassis { transform: scale(0.42); transform-origin: center right; margin-right: 18vw; width: 390px; height: 805px; flex-shrink: 0; background: linear-gradient(135deg, #484058, #1c1825, #2d2639); border-radius: 54px; padding: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.9), 0 0 0 2px #6b6183, inset 0 0 12px rgba(255,255,255,.15); position: relative; }
+  .btn-power { position: absolute; right: -6px; top: 190px; width: 6px; height: 50px; background: #554c69; border-radius: 0 3px 3px 0; cursor: pointer; box-shadow: 2px 0 5px rgba(0,0,0,.5); }
+  .btn-power:active { background: var(--red); }
+  .btn-vol-up, .btn-vol-down { position: absolute; right: -4px; width: 4px; height: 42px; background: #554c69; border-radius: 0 2px 2px 0; }
+  .btn-vol-up { top: 255px; } .btn-vol-down { top: 305px; }
+  .phone-screen { width: 100%; height: 100%; border-radius: 44px; position: relative; overflow: hidden; background: #080a10; transition: filter .2s; }
 
-    .btn-power { position: absolute; right: -6px; top: 190px; width: 6px; height: 50px; background: #554c69; border-radius: 0 3px 3px 0; cursor: pointer; box-shadow: 2px 0 5px rgba(0,0,0,0.5); }
-    .btn-power:active { background: #8a05be; }
-    .btn-vol-up { position: absolute; right: -4px; top: 255px; width: 4px; height: 42px; background: #554c69; border-radius: 0 2px 2px 0; }
-    .btn-vol-down { position: absolute; right: -4px; top: 305px; width: 4px; height: 42px; background: #554c69; border-radius: 0 2px 2px 0; }
+  .wallpaper-bg, .lock-screen { background-color: #080a10; background-image: url('https://i.postimg.cc/kgVP7mQp/file-0000000093e0820eb80e1fc6e375abe2.png'); background-position: center; background-size: cover; background-repeat: no-repeat; }
+  .wallpaper-bg { position: absolute; inset: 0; z-index: 1; }
+  .wallpaper-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.3), rgba(0,0,0,0) 50%, rgba(0,0,0,.3)); pointer-events: none; }
+  .camera-notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: #000; border: 1px solid #222; border-radius: 50%; z-index: 600; }
 
-    .phone-screen { 
-      width: 100%; height: 100%; 
-      border-radius: 44px; position: relative; overflow: hidden; display: flex; flex-direction: column; 
-    }
+  .status-bar { position: absolute; top: 0; left: 0; right: 0; height: 34px; display: flex; justify-content: space-between; align-items: center; padding: 4px 22px 0; color: #fff; font-size: 11px; font-weight: 600; z-index: 550; pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.7); }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
 
-    /* WALLPAPER DE FUNDO DA HOME */
-    .wallpaper-bg {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background-color: #080a10;
-      background-image: url('https://i.imgur.com/l6BzkPD.png');
-      background-position: center center;
-      background-size: contain;
-      background-repeat: no-repeat;
-      z-index: 1;
-    }
+  /* ===== Lock ===== */
+  .lock-screen { position: absolute; inset: 0; z-index: 200; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 60px 20px 20px; transition: transform .35s cubic-bezier(.4,0,.2,1), opacity .3s; }
+  .lock-screen::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,.35); backdrop-filter: blur(4px); z-index: -1; }
+  .lock-clock { text-align: center; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.9); }
+  .lock-clock .time { font-size: 58px; font-weight: 200; letter-spacing: -1px; }
+  .lock-clock .date { font-size: 13px; opacity: .9; margin-top: -5px; text-transform: capitalize; }
+  .fingerprint-area { display: flex; flex-direction: column; align-items: center; gap: 8px; color: rgba(255,255,255,.9); cursor: pointer; margin-bottom: 30px; font-size: 11px; }
+  .fingerprint-icon { width: 58px; height: 58px; border-radius: 50%; border: 2px solid rgba(255,255,255,.4); display: flex; justify-content: center; align-items: center; font-size: 26px; color: #ff6b6b; background: rgba(0,0,0,.5); animation: pulse 2.4s infinite; transition: transform .15s; }
+  .fingerprint-icon:active { transform: scale(.9); }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 14px rgba(225,6,0,.4); } 50% { box-shadow: 0 0 26px rgba(225,6,0,.9); } }
 
-    .wallpaper-bg::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.3) 100%);
-      pointer-events: none;
-    }
+  /* ===== Home ===== */
+  .home-screen { position: absolute; inset: 0; padding: 50px 15px 48px; display: flex; flex-direction: column; justify-content: space-between; z-index: 10; }
+  .widget-clock { color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.8); padding-left: 5px; }
+  .widget-clock .time { font-size: 48px; font-weight: 200; }
+  .widget-clock .date { font-size: 12px; opacity: .9; }
+  .swipe-hint { text-align: center; color: rgba(255,255,255,.75); font-size: 11px; margin-bottom: 8px; animation: bounce 1.8s infinite; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
+  @keyframes bounce { 0%,100% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(-5px); opacity: .95; } }
+  .dock-bar { background: rgba(0,0,0,.45); backdrop-filter: blur(15px); border-radius: 22px; padding: 8px; display: flex; justify-content: space-around; border: 1px solid rgba(255,255,255,.1); }
 
-    .camera-notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background-color: #000; border: 1px solid #222; border-radius: 50%; z-index: 200; }
+  /* ===== Gaveta ===== */
+  .app-drawer { position: absolute; inset: 0; background: rgba(12,10,16,.86); backdrop-filter: blur(20px); z-index: 90; padding: 55px 18px 48px; display: flex; flex-direction: column; transform: translateY(100%); transition: transform .32s cubic-bezier(.1,.9,.2,1); visibility: hidden; }
+  .app-drawer.open { transform: translateY(0); visibility: visible; }
+  .search-box { width: 100%; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: 9px 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 22px; color: rgba(255,255,255,.8); }
+  .search-box input { flex: 1; background: none; border: none; outline: none; color: #fff; font-size: 13px; }
+  .search-box input::placeholder { color: rgba(255,255,255,.6); }
+  .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 8px; overflow-y: auto; align-content: start; }
+  .app-grid::-webkit-scrollbar { width: 0; }
+  .app-icon { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; transition: transform .1s; }
+  .app-icon:active { transform: scale(.88); }
+  .icon-box { position: relative; width: 52px; height: 52px; border-radius: 16px; display: flex; justify-content: center; align-items: center; color: #fff; font-size: 22px; box-shadow: 0 4px 12px rgba(0,0,0,.5); }
+  .badge { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: #f44336; color: #fff; font-size: 10px; font-weight: 700; display: none; justify-content: center; align-items: center; border: 1.5px solid #1c1825; }
+  .app-name { color: #fff; font-size: 10px; font-weight: 500; text-shadow: 0 1px 4px rgba(0,0,0,.9); }
+  .no-results { grid-column: 1 / -1; color: rgba(255,255,255,.6); text-align: center; font-size: 12px; margin-top: 20px; display: none; }
+  .bg-phone { background: linear-gradient(135deg,#2e7d32,#4caf50); } .bg-contacts { background: linear-gradient(135deg,#1565c0,#42a5f5); }
+  .bg-whatsapp { background: linear-gradient(135deg,#1b5e20,#25d366); } .bg-bank { background: linear-gradient(135deg,#000,#e10600); }
+  .bg-gps { background: linear-gradient(135deg,#b71c1c,#f44336); } .bg-services { background: linear-gradient(135deg,#e65100,#ff9800); }
+  .bg-camera { background: linear-gradient(135deg,#263238,#546e7a); } .bg-gallery { background: linear-gradient(135deg,#f57f17,#fbc02d); }
+  .bg-uber { background: linear-gradient(135deg,#000,#333); } .bg-music { background: linear-gradient(135deg,#880e4f,#e91e63); }
+  .bg-olx { background: linear-gradient(135deg,#4a148c,#7b1fa2); } .bg-settings { background: linear-gradient(135deg,#37474f,#78909c); }
+  .bg-browser { background: linear-gradient(135deg,#0277bd,#03a9f4); }
 
-    /* Barra de Status */
-    .status-bar { height: 32px; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 18px; color: #fff; font-size: 11px; font-weight: 600; z-index: 150; margin-top: 2px; }
-    .status-icons { display: flex; gap: 6px; align-items: center; }
+  /* ===== Janelas dos apps ===== */
+  .app-window { --bg: #f4f5f7; --accent: #333; position: absolute; inset: 0; background: var(--bg); z-index: 180; display: none; flex-direction: column; padding-bottom: 38px; color: #333; }
+  .app-window.show { display: flex; animation: appOpen .2s ease-out; }
+  .app-window.dark { --bg: #0e0e11; color: #fff; }
+  @keyframes appOpen { from { transform: scale(.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .app-header { height: var(--hh); flex-shrink: 0; padding: 30px 15px 0; display: flex; align-items: center; gap: 12px; font-weight: 700; color: #fff; font-size: 16px; }
+  .app-header .back { cursor: pointer; padding: 8px 4px; }
+  .app-header .hx { margin-left: auto; cursor: pointer; padding: 8px 4px; }
+  .app-content { flex: 1; padding: 15px; overflow-y: auto; position: relative; }
+  .app-content.np { padding: 0; display: flex; flex-direction: column; }
+  .app-content::-webkit-scrollbar, .sub::-webkit-scrollbar { width: 0; }
+  .sub { position: absolute; left: 0; right: 0; top: var(--hh); bottom: 38px; display: none; flex-direction: column; overflow-y: auto; background: var(--bg); z-index: 8; }
+  .sub.show { display: flex; animation: appOpen .18s ease-out; }
+  .sub.pad { padding: 15px; } .sub.pad > * { flex-shrink: 0; }
 
-    /* Tela de Bloqueio Com a Imagem de Fundo */
-    .lock-screen {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background-color: #080a10;
-      background-image: url('https://i.imgur.com/l6BzkPD.png');
-      background-position: center center;
-      background-size: contain;
-      background-repeat: no-repeat;
-      z-index: 100; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 50px 20px 20px;
-      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
-      cursor: grab;
-    }
+  .btn-action { width: 100%; padding: 12px; border: none; border-radius: 12px; font-weight: 700; color: #fff; cursor: pointer; margin-top: 8px; font-size: 13px; transition: transform .1s, filter .1s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+  .btn-action:active { transform: scale(.97); filter: brightness(.88); }
+  .btn-small { padding: 6px 12px; border: none; border-radius: 8px; background: #eceff1; color: #333; font-weight: 700; cursor: pointer; font-size: 12px; }
+  .dark .btn-small { background: #26262c; color: #fff; }
+  .btn-small.red { background: var(--red); color: #fff; }
+  .input-field { width: 100%; padding: 12px; border: 1px solid #d0d0d0; border-radius: 12px; margin-bottom: 8px; outline: none; font-size: 13px; background: #fff; color: #222; }
+  .dark .input-field { background: #1b1b20; border-color: #33333a; color: #fff; }
+  .input-field:focus { border-color: var(--red); }
+  .input-field.error { border-color: #f44336; animation: shake .25s; }
+  @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+  .section-title { font-size: 11px; font-weight: 700; color: #888; margin: 12px 0 8px; text-transform: uppercase; letter-spacing: .6px; }
+  .empty { text-align: center; color: #999; font-size: 12px; padding: 22px 10px; }
+  .empty i { display: block; font-size: 30px; margin-bottom: 8px; opacity: .5; }
 
-    .lock-screen::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(4px);
-      z-index: -1;
-    }
+  .row { display: flex; align-items: center; gap: 12px; padding: 10px; background: #fff; border-radius: 12px; margin-bottom: 8px; border: 1px solid #eee; cursor: pointer; font-size: 13px; }
+  .dark .row { background: var(--dark); border-color: #26262c; }
+  .row .grow { flex: 1; min-width: 0; } .row .grow b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row small { color: #888; font-size: 11px; } .row .right { text-align: right; font-size: 11px; color: #888; }
+  .av { width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #fff; font-weight: 700; flex-shrink: 0; font-size: 16px; }
+  .ic { width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: #fff; font-size: 17px; flex-shrink: 0; }
+  .tabs { display: flex; background: #fff; flex-shrink: 0; border-bottom: 1px solid #e6e6e6; }
+  .dark .tabs { background: var(--dark); border-color: #26262c; }
+  .tab { flex: 1; text-align: center; padding: 12px 0; font-size: 12px; font-weight: 700; color: #888; border-bottom: 3px solid transparent; cursor: pointer; }
+  .tab.on { color: var(--accent); border-color: var(--accent); }
+  .tab-body { padding: 12px; flex: 1; overflow-y: auto; } .tab-body::-webkit-scrollbar { width: 0; }
+  .fab { position: absolute; right: 16px; bottom: 54px; width: 52px; height: 52px; border-radius: 50%; color: #fff; display: none; justify-content: center; align-items: center; font-size: 20px; box-shadow: 0 6px 16px rgba(0,0,0,.4); z-index: 6; cursor: pointer; }
+  .fab:active { transform: scale(.92); }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 16px; background: #eceff1; font-size: 12px; font-weight: 600; cursor: pointer; margin: 0 6px 6px 0; }
+  .dark .chip { background: #26262c; }
 
-    .lock-clock { text-align: center; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.9); }
-    .lock-clock .time { font-size: 54px; font-weight: 200; letter-spacing: -1px; }
-    .lock-clock .date { font-size: 13px; opacity: 0.9; margin-top: -5px; }
+  /* CariocaPay */
+  .cp-hero { background: linear-gradient(135deg, #e10600, #7a0000 70%, #1a0000); border-radius: 20px; padding: 18px; color: #fff; box-shadow: 0 10px 24px rgba(225,6,0,.3); position: relative; overflow: hidden; }
+  .cp-hero::after { content: ''; position: absolute; right: -30px; top: -30px; width: 130px; height: 130px; border-radius: 50%; background: rgba(0,0,0,.22); }
+  .cp-hero small { opacity: .85; } .cp-hero h2 { font-size: 30px; margin: 4px 0 2px; position: relative; z-index: 1; } .cp-hero .eye { position: absolute; right: 16px; top: 18px; z-index: 2; cursor: pointer; padding: 4px; }
+  .cp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0 4px; }
+  .cp-act { background: var(--dark); border: 1px solid #26262c; border-radius: 14px; padding: 12px 4px; text-align: center; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; gap: 7px; align-items: center; }
+  .cp-act i { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #e10600, #8a0000); display: flex; justify-content: center; align-items: center; font-size: 16px; }
+  .cp-act:active { transform: scale(.95); }
+  .in { color: #4cd964; font-weight: 700; } .out { color: #ff5a4f; font-weight: 700; }
+  .vcard { border-radius: 18px; padding: 18px; background: linear-gradient(135deg, #000, #2a0000 55%, #e10600); color: #fff; height: 180px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 10px 24px rgba(0,0,0,.6); border: 1px solid #3a0000; }
+  .vcard.blocked { filter: grayscale(1) brightness(.6); }
+  .bar { height: 8px; background: #26262c; border-radius: 4px; overflow: hidden; margin: 8px 0; } .bar > div { height: 100%; background: linear-gradient(90deg, #e10600, #ff6b6b); }
+  .big { font-size: 26px; font-weight: 700; }
 
-    /* Leitor Digital Posicionado na Parte Inferior */
-    .fingerprint-area { 
-      display: flex; flex-direction: column; align-items: center; gap: 8px; 
-      color: rgba(255, 255, 255, 0.9); cursor: pointer; margin-bottom: 25px; 
-    }
-    .fingerprint-icon { 
-      width: 58px; height: 58px; border-radius: 50%; 
-      border: 2px solid rgba(255, 255, 255, 0.4); 
-      display: flex; justify-content: center; align-items: center; 
-      font-size: 26px; color: #64b5f6; 
-      box-shadow: 0 0 20px rgba(100, 181, 246, 0.6); 
-      background: rgba(0,0,0,0.5); 
-      transition: transform 0.15s;
-    }
-    .fingerprint-icon:active { transform: scale(0.9); background: rgba(100, 181, 246, 0.3); }
+  /* Telefone / WhatsApp */
+  .dial-display { text-align: center; font-size: 28px; min-height: 38px; margin: 6px 0 0; letter-spacing: 2px; font-weight: 300; }
+  .dial-name { text-align: center; font-size: 12px; color: #777; min-height: 18px; margin-bottom: 8px; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .key { background: #fff; border: 1px solid #e3e3e3; border-radius: 50%; width: 62px; height: 62px; margin: 0 auto; font-size: 22px; color: #222; cursor: pointer; }
+  .key:active { background: #dcdcdc; }
+  .call-row { display: flex; gap: 10px; margin-top: 14px; align-items: center; justify-content: center; }
+  .call-btn { width: 62px; height: 62px; border-radius: 50%; border: none; background: #2e7d32; color: #fff; font-size: 22px; cursor: pointer; } .call-btn:active { filter: brightness(.85); }
+  .del-btn { width: 50px; height: 50px; border: none; background: none; font-size: 20px; color: #777; cursor: pointer; }
+  .chat-top { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f0f0f0; flex-shrink: 0; font-size: 13px; }
+  .chat-top .grow { flex: 1; } .chat-top small { display: block; color: #777; font-size: 11px; } .chat-top i.act { font-size: 18px; color: #075e54; padding: 8px; cursor: pointer; }
+  .wa-chat { flex: 1 1 0; min-height: 0; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; background: #e5ddd5; } .wa-chat::-webkit-scrollbar { width: 0; }
+  .bubble { align-self: flex-end; max-width: 80%; background: #dcf8c6; padding: 7px 10px; border-radius: 10px 10px 2px 10px; font-size: 13px; word-wrap: break-word; box-shadow: 0 1px 1px rgba(0,0,0,.15); color: #222; }
+  .bubble small { display: block; text-align: right; font-size: 9px; color: #777; margin-top: 2px; }
+  .bubble.in { align-self: flex-start; background: #fff; border-radius: 10px 10px 10px 2px; }
+  .wa-input { display: flex; gap: 6px; padding: 8px; background: #f0f0f0; flex-shrink: 0; }
+  .wa-input .input-field { margin: 0; border-radius: 20px; }
+  .wa-send { width: 44px; height: 44px; flex-shrink: 0; border: none; border-radius: 50%; background: #25d366; color: #fff; font-size: 16px; cursor: pointer; }
+  .st-ring { padding: 2px; border-radius: 50%; border: 2.5px solid #25d366; } .st-ring.seen { border-color: #bbb; }
+  .unread { min-width: 20px; height: 20px; border-radius: 10px; background: #25d366; color: #fff; font-size: 11px; font-weight: 700; display: inline-flex; justify-content: center; align-items: center; padding: 0 5px; margin-top: 4px; }
 
-    /* Home Screen (Limpa) */
-    .home-screen { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; z-index: 10; position: relative; }
-    .widget-clock { color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.8); padding-left: 5px; }
-    .widget-clock .time { font-size: 48px; font-weight: 200; }
-    .widget-clock .date { font-size: 12px; opacity: 0.9; }
+  /* Overlays */
+  .overlay { position: absolute; inset: 0; display: none; z-index: 400; padding-bottom: 38px; }
+  .overlay.show { display: flex; animation: appOpen .18s ease-out; }
+  #story-ov { background: #222; flex-direction: column; z-index: 420; }
+  .story-bars { display: flex; gap: 4px; padding: 36px 12px 0; } .story-bars div { flex: 1; height: 3px; background: rgba(255,255,255,.35); border-radius: 2px; overflow: hidden; } .story-bars div i { display: block; height: 100%; width: 0; background: #fff; }
+  .story-bars div.done i { width: 100%; } .story-bars div.run i { animation: fill 4.5s linear forwards; } @keyframes fill { to { width: 100%; } }
+  .story-head { display: flex; align-items: center; gap: 10px; color: #fff; padding: 10px 12px; font-size: 13px; position: relative; z-index: 3; } .story-head small { opacity: .8; display: block; font-size: 11px; } .story-head i { padding: 8px; cursor: pointer; }
+  .story-text { flex: 1; display: flex; justify-content: center; align-items: center; text-align: center; color: #fff; font-size: 24px; font-weight: 600; padding: 30px; word-break: break-word; }
+  .story-tap { position: absolute; top: 90px; bottom: 60px; width: 50%; z-index: 2; } .story-tap.l { left: 0; } .story-tap.r { right: 0; }
+  #call-ov { background: linear-gradient(180deg, #1c0000, #000); flex-direction: column; align-items: center; justify-content: space-between; padding: 90px 20px 70px; color: #fff; z-index: 440; text-align: center; }
+  #call-ov .av { width: 110px; height: 110px; font-size: 44px; margin: 0 auto 16px; } #call-ov h2 { font-weight: 400; } #call-ov p { opacity: .75; margin-top: 6px; font-size: 14px; }
+  .call-ctrls { display: flex; gap: 18px; justify-content: center; align-items: center; }
+  .cbtn { width: 62px; height: 62px; border-radius: 50%; border: none; font-size: 22px; color: #fff; background: rgba(255,255,255,.15); cursor: pointer; } .cbtn.on { background: #fff; color: #000; } .cbtn.end { background: #e53935; } .cbtn.acc { background: #43a047; }
+  #modal-ov { background: rgba(0,0,0,.65); align-items: center; justify-content: center; z-index: 460; padding: 20px 20px 50px; }
+  #modal-card { background: #fff; border-radius: 18px; padding: 18px; width: 100%; max-height: 90%; overflow-y: auto; color: #222; } #modal-card::-webkit-scrollbar { width: 0; }
+  #modal-card h4 { font-size: 16px; margin-bottom: 4px; } #modal-card p { font-size: 12px; color: #666; margin-bottom: 10px; } #modal-card label { font-size: 11px; font-weight: 700; color: #777; display: block; margin: 8px 0 4px; text-transform: uppercase; }
+  #modal-card .input-field { background: #f5f5f5; color: #222; border-color: #ddd; margin-bottom: 2px; } textarea.input-field { resize: none; height: 70px; }
+  .m-row { display: flex; gap: 8px; margin-top: 14px; } .m-btn { flex: 1; padding: 11px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; background: #eee; font-size: 13px; } .m-btn.ok { background: var(--red); color: #fff; }
+  .colors { display: flex; gap: 8px; flex-wrap: wrap; } .colors span { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; } .colors span.sel { border-color: #222; }
 
-    /* Indicador para Arrastar para Cima na Home */
-    .swipe-hint {
-      text-align: center; color: rgba(255,255,255,0.7); font-size: 11px; margin-bottom: 8px;
-      animation: bounce 1.8s infinite; display: flex; flex-direction: column; align-items: center; gap: 2px;
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); opacity: 0.5; }
-      50% { transform: translateY(-5px); opacity: 0.9; }
-    }
 
-    .dock-bar { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(15px); border-radius: 22px; padding: 8px; display: flex; justify-content: space-around; border: 1px solid rgba(255,255,255,0.1); }
+  .app-icon .icon-box { border:1px solid rgba(255,255,255,.25); }
+  .app-icon .icon-box i { display:block; line-height:1; filter:drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
+  .music-hero { background:linear-gradient(145deg,#242424,#090909); color:#fff; border-radius:18px; padding:16px; }
+  .music-cover { width:100%; aspect-ratio:1/1; max-height:205px; border-radius:14px; margin:0 auto 14px; display:flex; align-items:center; justify-content:center; font-size:76px; color:#fff; background:linear-gradient(135deg,#e10600,#310000 65%,#111); }
+  .music-controls { display:flex; justify-content:center; align-items:center; gap:22px; margin:18px 0; }
+  .music-controls button { border:0; background:transparent; color:#fff; font-size:23px; padding:8px; }
+  .music-controls .play { background:#1ed760; color:#071b0d; width:54px; height:54px; border-radius:50%; font-size:21px; }
+  .music-list .row.active { border-color:#1ed760; background:#effaf2; }
+  .media-preview { width:100%; max-height:260px; object-fit:contain; border-radius:12px; background:#111; }
+  .setting-group { margin:14px 0 7px; color:#e10600; font-size:11px; font-weight:800; letter-spacing:.8px; }
+  /* Música / Câmera / Galeria / Ajustes */
+  .vinyl { width: 120px; height: 120px; border-radius: 50%; margin: 6px auto 14px; background: radial-gradient(circle,#e91e63 0 14%,#111 15% 40%,#222 41% 100%); box-shadow: 0 6px 18px rgba(0,0,0,.4); } .vinyl.spin { animation: spin 3s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+  .station.active { border-color: #e91e63; color: #e91e63; }
+  .viewfinder { flex: 1; margin: 0; background: radial-gradient(circle at 50% 40%, #2a2a2a, #050505); display: flex; justify-content: center; align-items: center; color: rgba(255,255,255,.25); font-size: 70px; position: relative; }
+  .viewfinder::before { content: ''; position: absolute; inset: 30px; border: 1px dashed rgba(255,255,255,.2); border-radius: 10px; }
+  .cam-ctrls { display: flex; justify-content: space-around; align-items: center; padding: 18px 10px 14px; background: #000; flex-shrink: 0; }
+  .cam-btn { color: #fff; font-size: 20px; width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.12); display: flex; justify-content: center; align-items: center; cursor: pointer; } .cam-btn.on { background: #ffd600; color: #000; }
+  .shutter { width: 66px; height: 66px; border-radius: 50%; border: 3px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; } .shutter div { width: 50px; height: 50px; background: #fff; border-radius: 50%; } .shutter:active div { transform: scale(.85); }
+  .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 5; } .flash.go { animation: flash .35s ease-out; } @keyframes flash { 0% { opacity: .95; } 100% { opacity: 0; } }
+  .gal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; align-content: start; } .gal-item { height: 92px; border-radius: 8px; display: flex; flex-direction: column; justify-content: flex-end; padding: 5px; color: #fff; font-size: 10px; cursor: pointer; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+  .toggle { position: relative; width: 44px; height: 25px; flex-shrink: 0; } .toggle input { opacity: 0; width: 100%; height: 100%; position: absolute; cursor: pointer; z-index: 2; margin: 0; }
+  .toggle span { position: absolute; inset: 0; background: #bbb; border-radius: 13px; transition: .2s; } .toggle span::after { content: ''; position: absolute; top: 3px; left: 3px; width: 19px; height: 19px; background: #fff; border-radius: 50%; transition: .2s; }
+  .toggle input:checked + span { background: #4caf50; } .toggle input:checked + span::after { transform: translateX(19px); }
+  .ride-opt.selected { border: 2px solid #000; }
+  .pbar { height: 6px; border-radius: 3px; background: #ddd; overflow: hidden; margin: 14px 0; } .pbar div { height: 100%; background: #000; width: 0; transition: width .5s; }
 
-    /* App Drawer (Gaveta de Apps) */
-    .app-drawer {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 12, 25, 0.75);
-      backdrop-filter: blur(20px);
-      z-index: 90;
-      padding: 55px 18px 40px;
-      display: flex; flex-direction: column; justify-content: flex-start;
-      transform: translateY(100%);
-      transition: transform 0.32s cubic-bezier(0.1, 0.9, 0.2, 1);
-    }
-    .app-drawer.open { transform: translateY(0); }
+  .toast { position: absolute; top: 40px; left: 50%; transform: translate(-50%, -150%); background: rgba(30,30,36,.96); color: #fff; padding: 11px 16px; border-radius: 18px; font-size: 12px; z-index: 700; max-width: 86%; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,.5); transition: transform .3s cubic-bezier(.2,.9,.3,1.2); pointer-events: none; }
+  .toast.show { transform: translate(-50%, 0); } .toast.err { background: rgba(183,28,28,.97); } .toast.ok { background: rgba(27,94,32,.97); }
 
-    .drawer-header { margin-bottom: 20px; }
-    .search-box {
-      width: 100%; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 20px; padding: 8px 15px; color: #fff; font-size: 13px; display: flex; align-items: center; gap: 8px;
-    }
-
-    .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px 10px; }
-    .app-icon { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
-    .app-icon:active { transform: scale(0.88); }
-    .icon-box { width: 48px; height: 48px; border-radius: 14px; display: flex; justify-content: center; align-items: center; color: #fff; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-    .app-name { color: #fff; font-size: 10px; font-weight: 500; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
-
-    /* Paleta de Cores dos Apps */
-    .bg-phone { background: linear-gradient(135deg, #2e7d32, #4caf50); }
-    .bg-whatsapp { background: linear-gradient(135deg, #1b5e20, #25d366); }
-    .bg-bank { background: linear-gradient(135deg, #4a148c, #8a05be); }
-    .bg-gps { background: linear-gradient(135deg, #b71c1c, #f44336); }
-    .bg-services { background: linear-gradient(135deg, #e65100, #ff9800); }
-    .bg-camera { background: linear-gradient(135deg, #263238, #546e7a); }
-    .bg-gallery { background: linear-gradient(135deg, #f57f17, #fbc02d); }
-    .bg-uber { background: linear-gradient(135deg, #000, #333); }
-    .bg-music { background: linear-gradient(135deg, #880e4f, #e91e63); }
-    .bg-olx { background: linear-gradient(135deg, #4a148c, #6a1b9a); }
-    .bg-settings { background: linear-gradient(135deg, #37474f, #78909c); }
-    .bg-browser { background: linear-gradient(135deg, #0277bd, #03a9f4); }
-
-    /* Janelas dos Apps */
-    .app-window { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #f4f5f7; z-index: 180; display: none; flex-direction: column; animation: appOpen 0.2s ease-out forwards; }
-    @keyframes appOpen { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-    .app-header { height: 48px; background: #fff; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #e0e0e0; gap: 12px; font-weight: 600; color: #222; }
-    .app-header i { cursor: pointer; }
-    .app-content { flex: 1; padding: 15px; overflow-y: auto; color: #333; }
-
-    /* Componentes internos */
-    .btn-action { width: 100%; padding: 10px; border: none; border-radius: 8px; font-weight: bold; color: #fff; cursor: pointer; margin-top: 8px; }
-    .input-field { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 8px; outline: none; }
-    .list-item { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
-
-    /* Barra de Navegação Centralizada na Parte Inferior */
-    .nav-bar { 
-      height: 36px; 
-      width: 100%; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      gap: 35px;
-      z-index: 190; 
-      padding-bottom: 6px;
-      background: transparent;
-    }
-    .nav-btn { 
-      color: rgba(255, 255, 255, 0.85); 
-      font-size: 14px; 
-      cursor: pointer; 
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      transition: background 0.15s, transform 0.1s;
-    }
-    .nav-btn:active {
-      background: rgba(255, 255, 255, 0.2);
-      transform: scale(0.9);
-    }
-    .home-line { 
-      width: 70px; 
-      height: 4px; 
-      background: rgba(255, 255, 255, 0.9); 
-      border-radius: 2px; 
-      cursor: pointer; 
-      box-shadow: 0 1px 3px rgba(0,0,0,0.5); 
-      transition: opacity 0.15s;
-    }
-    .home-line:active {
-      opacity: 0.6;
-    }
-  </style>
+  .nav-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 38px; display: flex; justify-content: center; align-items: center; gap: 35px; z-index: 500; padding-bottom: 6px; }
+  .nav-btn { color: rgba(255,255,255,.9); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; text-shadow: 0 1px 3px rgba(0,0,0,.6); } .nav-btn:active { background: rgba(255,255,255,.2); transform: scale(.9); }
+  .nav-bar.dark .nav-btn { color: #333; text-shadow: none; } .nav-bar.dark .home-line { background: #333; box-shadow: none; }
+  .home-line { width: 70px; height: 4px; background: rgba(255,255,255,.9); border-radius: 2px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.5); } .home-line:active { opacity: .6; }
+</style>
 </head>
 <body>
 
-  <div class="phone-chassis">
-    <!-- Botão Lateral Desliga Silenciosamente -->
-    <div class="btn-power" onclick="closePhoneHTML()"></div>
-    <div class="btn-vol-up"></div>
-    <div class="btn-vol-down"></div>
+<div class="phone-chassis">
+  <div class="btn-power" id="btn-power" title="Clique: bloquear • Segure: fechar"></div>
+  <div class="btn-vol-up"></div><div class="btn-vol-down"></div>
 
-    <div class="phone-screen" id="touch-area">
-      <!-- Imagem de Fundo Home -->
-      <div class="wallpaper-bg"></div>
+  <div class="phone-screen" id="touch-area">
+    <div class="wallpaper-bg"></div>
+    <div class="camera-notch"></div>
 
-      <div class="camera-notch"></div>
-
-      <!-- Barra de Status -->
-      <div class="status-bar">
-        <span class="clock-txt">12:00</span>
-        <div class="status-icons">
-          <i class="fas fa-wifi"></i>
-          <i class="fas fa-signal"></i>
-          <i class="fas fa-battery-full"></i>
-        </div>
+    <div class="status-bar">
+      <span class="clock-txt">12:00</span>
+      <div class="status-icons">
+        <i class="fas fa-plane" id="st-plane" style="display:none"></i>
+        <i class="fas fa-wifi" id="st-wifi"></i>
+        <i class="fas fa-signal" id="st-signal"></i>
+        <i class="fas fa-battery-full"></i>
       </div>
+    </div>
+    <div class="toast" id="toast"></div>
 
-      <!-- Lock Screen -->
-      <div id="lockscreen" class="lock-screen">
-        <div class="lock-clock">
-          <div class="time clock-txt">12:00</div>
-          <div class="date">Segunda, 7 de Setembro</div>
-        </div>
+    <!-- Lock -->
+    <div id="lockscreen" class="lock-screen">
+      <div class="lock-clock"><div class="time clock-txt">12:00</div><div class="date date-txt"></div></div>
+      <div class="fingerprint-area" data-act="unlock"><div class="fingerprint-icon"><i class="fas fa-fingerprint"></i></div><span>Toque ou arraste para cima</span></div>
+    </div>
 
-        <!-- Leitor de Digital na Parte Inferior -->
-        <div class="fingerprint-area" onclick="unlockPhone()">
-          <div class="fingerprint-icon"><i class="fas fa-fingerprint"></i></div>
-          <span style="font-size: 11px;">Toque ou arraste para abrir</span>
-        </div>
+    <!-- Home -->
+    <div class="home-screen">
+      <div class="widget-clock"><div class="time clock-txt">12:00</div><div class="date">Carioca Roleplay</div></div>
+      <div>
+        <div class="swipe-hint" data-act="drawer"><i class="fas fa-chevron-up"></i><span>Arraste para cima</span></div>
+        <div class="dock-bar" id="dock"></div>
       </div>
+    </div>
 
-      <!-- Home Screen (Limpa) -->
-      <div class="home-screen">
-        <div class="widget-clock">
-          <div class="time clock-txt">12:00</div>
-          <div class="date">Nova Era Roleplay</div>
-        </div>
+    <!-- Gaveta -->
+    <div id="app-drawer" class="app-drawer">
+      <div class="search-box"><i class="fas fa-search"></i><input type="text" id="app-search" placeholder="Pesquisar aplicativos..." autocomplete="off"></div>
+      <div class="app-grid" id="app-grid"></div>
+    </div>
 
-        <div>
-          <div class="swipe-hint" onclick="openDrawer()">
-            <i class="fas fa-chevron-up"></i>
-            <span>Arraste para cima</span>
-          </div>
+    <!-- ===== CARIOCAPAY ===== -->
+    <div id="app-bank" class="app-window dark" style="--accent:#e10600">
+      <div class="app-header" style="background:linear-gradient(90deg,#000,#5c0000)"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fas fa-wallet" style="color:var(--red2)"></i><span>CariocaPay</span></div>
+      <div class="app-content" id="c-bank"></div><div class="sub" id="sub-bank"></div>
+    </div>
 
-          <div class="dock-bar">
-            <div class="app-icon" onclick="openApp('app-phone')"><div class="icon-box bg-phone"><i class="fas fa-phone"></i></div></div>
-            <div class="app-icon" onclick="openApp('app-whatsapp')"><div class="icon-box bg-whatsapp"><i class="fab fa-whatsapp"></i></div></div>
-          </div>
-        </div>
-      </div>
+    <!-- GPS -->
+    <div id="app-gps" class="app-window" style="--accent:#f44336">
+      <div class="app-header" style="background:#e53935"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fas fa-map-marked-alt"></i><span>Navegador GPS</span></div>
+      <div class="app-content" id="c-gps"></div><div class="sub" id="sub-gps"></div>
+    </div>
 
-      <!-- GAVETA DE APPS (APP DRAWER) -->
-      <div id="app-drawer" class="app-drawer">
-        <div class="drawer-header">
-          <div class="search-box">
-            <i class="fas fa-search"></i>
-            <span>Pesquisar aplicativos...</span>
-          </div>
-        </div>
+    <!-- UBER -->
+    <div id="app-uber" class="app-window" style="--accent:#000">
+      <div class="app-header" style="background:#000"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fas fa-car"></i><span>Uber</span></div>
+      <div class="app-content" id="c-uber"></div><div class="sub" id="sub-uber"></div>
+    </div>
 
-        <div class="app-grid">
-          <div class="app-icon" onclick="openApp('app-bank')"><div class="icon-box bg-bank"><i class="fas fa-university"></i></div><span class="app-name">Nubank</span></div>
-          <div class="app-icon" onclick="openApp('app-gps')"><div class="icon-box bg-gps"><i class="fas fa-map-marked-alt"></i></div><span class="app-name">GPS</span></div>
-          <div class="app-icon" onclick="openApp('app-uber')"><div class="icon-box bg-uber"><i class="fas fa-car"></i></div><span class="app-name">Uber</span></div>
-          <div class="app-icon" onclick="openApp('app-services')"><div class="icon-box bg-services"><i class="fas fa-shield-alt"></i></div><span class="app-name">Serviços</span></div>
-          <div class="app-icon" onclick="openApp('app-camera')"><div class="icon-box bg-camera"><i class="fas fa-camera"></i></div><span class="app-name">Câmera</span></div>
-          <div class="app-icon" onclick="openApp('app-gallery')"><div class="icon-box bg-gallery"><i class="fas fa-images"></i></div><span class="app-name">Galeria</span></div>
-          <div class="app-icon" onclick="openApp('app-music')"><div class="icon-box bg-music"><i class="fas fa-music"></i></div><span class="app-name">Música</span></div>
-          <div class="app-icon" onclick="openApp('app-olx')"><div class="icon-box bg-olx"><i class="fas fa-shopping-bag"></i></div><span class="app-name">OLX</span></div>
-          <div class="app-icon" onclick="openApp('app-browser')"><div class="icon-box bg-browser"><i class="fas fa-globe"></i></div><span class="app-name">Internet</span></div>
-          <div class="app-icon" onclick="openApp('app-settings')"><div class="icon-box bg-settings"><i class="fas fa-cog"></i></div><span class="app-name">Ajustes</span></div>
-          <div class="app-icon" onclick="openApp('app-phone')"><div class="icon-box bg-phone"><i class="fas fa-phone"></i></div><span class="app-name">Telefone</span></div>
-          <div class="app-icon" onclick="openApp('app-whatsapp')"><div class="icon-box bg-whatsapp"><i class="fab fa-whatsapp"></i></div><span class="app-name">WhatsApp</span></div>
-        </div>
-      </div>
+    <!-- SERVIÇOS -->
+    <div id="app-services" class="app-window" style="--accent:#ff9800">
+      <div class="app-header" style="background:#fb8c00"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fas fa-shield-alt"></i><span>Serviços RP</span></div>
+      <div class="app-content" id="c-services"></div><div class="sub" id="sub-services"></div>
+    </div>
 
-      <!-- JANELAS INTERATIVAS DOS APLICATIVOS -->
+    <!-- CÂMERA -->
+    <div id="app-camera" class="app-window dark" style="--bg:#000">
+      <div class="flash" id="cam-flash"></div>
+      <div class="app-header" style="background:#000"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fas fa-camera"></i><span>Câmera</span></div>
+      <div class="app-content np" id="c-camera"></div><div class="sub" id="sub-camera"></div>
+    </div>
 
-      <!-- NUBANK -->
-      <div id="app-bank" class="app-window">
-        <div class="app-header" style="background:#8a05be; color:#fff;">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>Nubank</span>
-        </div>
-        <div class="app-content">
-          <p style="font-size:12px; color:#666;">Saldo em conta</p>
-          <h2 style="color:#8a05be; margin-bottom:15px;">R$ <span id="bank-val">50.000</span></h2>
-          <input type="number" id="pix-id" class="input-field" placeholder="ID do Jogador">
-          <input type="number" id="pix-val" class="input-field" placeholder="Valor (R$)">
-          <button class="btn-action" style="background:#8a05be;" onclick="appActions.sendPix()">Enviar Pix</button>
-        </div>
-      </div>
+    <!-- GALERIA -->
+    <div id="app-gallery" class="app-window" style="--accent:#f9a825">
+      <div class="app-header" style="background:#f9a825"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fas fa-images"></i><span>Galeria</span><small id="gal-count" style="margin-left:auto;font-weight:400;"></small></div>
+      <div class="app-content" id="c-gallery"></div><div class="sub" id="sub-gallery"></div>
+    </div>
 
-      <!-- GPS -->
-      <div id="app-gps" class="app-window">
-        <div class="app-header" style="background:#f44336; color:#fff;">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>Navegador GPS</span>
-        </div>
-        <div class="app-content">
-          <p style="font-size:13px; margin-bottom:10px; font-weight:bold;">Locais de Interesse:</p>
-          <div class="list-item"><span>Prefeitura</span> <button style="padding:4px 8px;" onclick="appActions.setGps('Prefeitura')">Marcar</button></div>
-          <div class="list-item"><span>Banco Principal</span> <button style="padding:4px 8px;" onclick="appActions.setGps('Banco Principal')">Marcar</button></div>
-          <div class="list-item"><span>Concessionária</span> <button style="padding:4px 8px;" onclick="appActions.setGps('Concessionaria')">Marcar</button></div>
-          <div class="list-item"><span>DP - Polícia</span> <button style="padding:4px 8px;" onclick="appActions.setGps('DP Policia')">Marcar</button></div>
-        </div>
-      </div>
-      <!-- UBER -->
-      <div id="app-uber" class="app-window">
-        <div class="app-header" style="background:#000; color:#fff;">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>Uber</span>
-        </div>
-        <div class="app-content">
-          <h3>Para onde você quer ir?</h3>
-          <input type="text" id="uber-dest" class="input-field" placeholder="Endereço ou local..." style="margin-top:10px;">
-          <button class="btn-action" style="background:#000;" onclick="appActions.callUber()">Solicitar Viagem</button>
-        </div>
-      </div>
+    <!-- MÚSICA -->
+    <div id="app-music" class="app-window" style="--accent:#e91e63">
+      <div class="app-header" style="background:#d81b60"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fas fa-music"></i><span>Music Player</span></div>
+      <div class="app-content" id="c-music"></div><div class="sub" id="sub-music"></div>
+    </div>
 
-      <!-- SERVIÇOS DE EMERGÊNCIA -->
-      <div id="app-services" class="app-window">
-        <div class="app-header" style="background:#ff9800; color:#fff;">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>Serviços RP</span>
-        </div>
-        <div class="app-content">
-          <button class="btn-action" style="background:#1976d2;" onclick="appActions.callService('Polícia')"><i class="fas fa-shield-alt"></i> Chamar Polícia (190)</button>
-          <button class="btn-action" style="background:#d32f2f;" onclick="appActions.callService('SAMU')"><i class="fas fa-ambulance"></i> Chamar SAMU (192)</button>
-          <button class="btn-action" style="background:#f57c00;" onclick="appActions.callService('Mecânico')"><i class="fas fa-wrench"></i> Chamar Mecânico</button>
-        </div>
-      </div>
+    <!-- OLX -->
+    <div id="app-olx" class="app-window" style="--accent:#7b1fa2">
+      <div class="app-header" style="background:#7b1fa2"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fas fa-shopping-bag"></i><span>OLX Vendas</span></div>
+      <div class="app-content np" id="c-olx"></div><div class="sub" id="sub-olx"></div>
+    </div>
 
-      <!-- CÂMERA -->
-      <div id="app-camera" class="app-window" style="background:#000;">
-        <div class="app-header" style="background:#000; color:#fff; border:none;">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>Câmera</span>
-        </div>
-        <div class="app-content" style="display:flex; justify-content:center; align-items:flex-end; padding-bottom:20px;">
-          <div onclick="appActions.snapPhoto()" style="width:60px; height:60px; border-radius:50%; border:3px solid #fff; display:flex; justify-content:center; align-items:center;">
-            <div style="width:46px; height:46px; background:#fff; border-radius:50%;"></div>
-          </div>
-        </div>
-      </div>
+    <!-- NAVEGADOR -->
+    <div id="app-browser" class="app-window" style="--accent:#0288d1">
+      <div class="app-header" style="background:#0288d1"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fas fa-globe"></i><span>Internet</span></div>
+      <div class="app-content" id="c-browser"></div><div class="sub" id="sub-browser"></div>
+    </div>
 
-      <!-- GALERIA -->
-      <div id="app-gallery" class="app-window">
-        <div class="app-header">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>Galeria</span>
-        </div>
-        <div class="app-content" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;">
-          <div style="background:#ccc; height:70px; border-radius:6px; display:flex; justify-content:center; align-items:center;"><i class="fas fa-image"></i></div>
-          <div style="background:#bbb; height:70px; border-radius:6px; display:flex; justify-content:center; align-items:center;"><i class="fas fa-image"></i></div>
-          <div style="background:#aaa; height:70px; border-radius:6px; display:flex; justify-content:center; align-items:center;"><i class="fas fa-image"></i></div>
-        </div>
-      </div>
+    <!-- AJUSTES -->
+    <div id="app-settings" class="app-window" style="--accent:#546e7a">
+      <div class="app-header" style="background:#455a64"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fas fa-cog"></i><span>Configurações</span></div>
+      <div class="app-content" id="c-settings"></div><div class="sub" id="sub-settings"></div>
+    </div>
 
-      <!-- MÚSICA / PLAYER -->
-      <div id="app-music" class="app-window">
-        <div class="app-header" style="background:#e91e63; color:#fff;">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>Music Player</span>
-        </div>
-        <div class="app-content" style="text-align:center;">
-          <i class="fas fa-music" style="font-size:50px; color:#e91e63; margin:20px 0;"></i>
-          <h4 id="song-title">Nenhuma música tocando</h4>
-          <br>
-          <button class="btn-action" style="background:#e91e63;" onclick="appActions.toggleMusic()">Play / Pause</button>
-        </div>
-      </div>
+    <!-- TELEFONE -->
+    <div id="app-phone" class="app-window" style="--accent:#2e7d32">
+      <div class="app-header" style="background:#2e7d32"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fas fa-phone"></i><span>Telefone</span></div>
+      <div class="app-content np" id="c-phone"></div><div class="sub" id="sub-phone"></div>
+    </div>
 
-      <!-- OLX / ML -->
-      <div id="app-olx" class="app-window">
-        <div class="app-header" style="background:#6a1b9a; color:#fff;">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>OLX Vendas</span>
-        </div>
-        <div class="app-content">
-          <p style="font-size:12px; font-weight:bold; margin-bottom:8px;">Anúncios do Servidor:</p>
-          <div class="list-item"><div><strong>Infernus 2024</strong><br><small>R$ 1.200.000</small></div><button onclick="appActions.buyOlx('Infernus')">Comprar</button></div>
-          <div class="list-item"><div><strong>Casa em Market</strong><br><small>R$ 450.000</small></div><button onclick="appActions.buyOlx('Casa')">Comprar</button></div>
-        </div>
-      </div>
+    <!-- WHATSAPP -->
+    <div id="app-whatsapp" class="app-window" style="--accent:#075e54">
+      <div class="app-header" style="background:#075e54"><i class="fas fa-arrow-left back" data-act="back"></i><i class="fab fa-whatsapp"></i><span>WhatsApp</span></div>
+      <div class="app-content np" id="c-whatsapp"></div>
+      <div class="fab" id="wa-fab" data-act="waFab" style="background:#25d366"></div>
+      <div class="sub" id="sub-whatsapp"></div>
+    </div>
 
-      <!-- NAVEGADOR / BROWSER -->
-      <div id="app-browser" class="app-window">
-        <div class="app-header" style="background:#03a9f4; color:#fff;">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>Navegador</span>
-        </div>
-        <div class="app-content">
-          <input type="text" class="input-field" placeholder="www.google.com" value="https://novaeraroleplay.com">
-          <button class="btn-action" style="background:#03a9f4;">Acessar Web</button>
-        </div>
-      </div>
+    <!-- Overlays -->
+    <div class="overlay" id="story-ov"></div>
+    <div class="overlay" id="call-ov"></div>
+    <div class="overlay" id="modal-ov"><div id="modal-card"></div></div>
 
-      <!-- CONFIGURAÇÕES -->
-      <div id="app-settings" class="app-window">
-        <div class="app-header">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>Configurações</span>
-        </div>
-        <div class="app-content">
-          <div class="list-item"><span>Modo Avião</span><input type="checkbox"></div>
-          <div class="list-item"><span>Notificações</span><input type="checkbox" checked></div>
-          <div class="list-item"><span>Bluetooth</span><input type="checkbox" checked></div>
-        </div>
-      </div>
-
-      <!-- DISCADOR / TELEFONE -->
-      <div id="app-phone" class="app-window">
-        <div class="app-header" style="background:#2e7d32; color:#fff;">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>Telefone</span>
-        </div>
-        <div class="app-content">
-          <input type="text" id="phone-num" class="input-field" placeholder="Digite o número...">
-          <button class="btn-action" style="background:#2e7d32;" onclick="appActions.makeCall()">Ligar Agora</button>
-        </div>
-      </div>
-
-      <!-- WHATSAPP -->
-      <div id="app-whatsapp" class="app-window">
-        <div class="app-header" style="background:#075e54; color:#fff;">
-          <i class="fas fa-arrow-left" onclick="closeCurrentApp()"></i><span>WhatsApp</span>
-        </div>
-        <div class="app-content">
-          <input type="text" id="wa-num" class="input-field" placeholder="ID/Número do Contato">
-          <input type="text" id="wa-msg" class="input-field" placeholder="Mensagem...">
-          <button class="btn-action" style="background:#25d366;" onclick="appActions.sendWhatsapp()">Enviar Mensagem</button>
-        </div>
-      </div>
-
-      <!-- Barra Inferior de Navegação Alinhada e Centralizada -->
-      <div class="nav-bar">
-        <div class="nav-btn" onclick="closeCurrentApp()"><i class="fas fa-bars"></i></div>
-        <div class="home-line" onclick="pressHomeButton()"></div>
-        <div class="nav-btn" onclick="closeCurrentApp()"><i class="fas fa-chevron-left"></i></div>
-      </div>
-
+    <div class="nav-bar" id="nav-bar">
+      <div class="nav-btn" data-act="recents" title="Apps"><i class="fas fa-bars"></i></div>
+      <div class="home-line" data-act="home" title="Início"></div>
+      <div class="nav-btn" data-act="back" title="Voltar"><i class="fas fa-chevron-left"></i></div>
     </div>
   </div>
+</div>
 
-  <script>
-    let isLocked = true;
-    let isDrawerOpen = false;
-    let activeAppId = null;
+<script>
+/* ================= Utilidades ================= */
+const $ = (id) => document.getElementById(id);
+if (!Array.prototype.at) Array.prototype.at = function (i) { return this[i < 0 ? this.length + i : i]; };
+const emit = (ev, ...a) => { if (window.cef && typeof cef.emit === 'function') cef.emit(ev, ...a); };
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = (n) => Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pad2 = (n) => String(n).padStart(2, '0');
+const hm = (ts) => { const d = new Date(ts); const t = new Date(); return d.toDateString() === t.toDateString() ? `${pad2(d.getHours())}:${pad2(d.getMinutes())}` : `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}`; };
+const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const COLORS = ['#e53935', '#8e24aa', '#3949ab', '#1e88e5', '#00897b', '#43a047', '#f4511e', '#6d4c41', '#546e7a'];
+const colorOf = (s) => { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; };
+const av = (name, size) => `<div class="av" style="background:${colorOf(name)};${size ? `width:${size}px;height:${size}px;` : ''}">${esc((String(name)[0] || '?').toUpperCase())}</div>`;
 
-    // Relógio
-    function updateClock() {
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      document.querySelectorAll('.clock-txt').forEach(el => el.innerText = timeStr);
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+/* ================= Estado persistente ================= */
+const KEY = 'cairo_phone_v2';
+const DEF = () => ({
+  me: { name: 'Jogador', id: String(rnd(10, 999)), num: String(rnd(100000, 999999)) },
+  balance: 50000, txs: [], savings: 0, cardBlocked: false, fatura: 0, limit: 5000, hide: false, keys: [],
+  contacts: [], chats: {}, unread: {}, myStatus: [], statuses: {}, seen: {}, calls: [],
+  photos: [], services: [], trips: [], history: [],
+  ads: [
+    { id: 1, title: 'Infernus 2024', price: 1200000, desc: 'Esportivo, único dono.', seller: 'Concessionária', mine: false },
+    { id: 2, title: 'Casa em Market', price: 450000, desc: '2 quartos, garagem.', seller: 'Imobiliária', mine: false },
+    { id: 3, title: 'Sanchez 2023', price: 85000, desc: 'Moto de trilha revisada.', seller: 'Oficina Central', mine: false },
+    { id: 4, title: 'Celular usado', price: 1500, desc: 'Funcionando perfeitamente.', seller: 'Anônimo', mine: false }
+  ],
+  set: { plane:false,wifi:true,bt:true,notif:true,sound:true,bright:100,darkMode:false,vibration:true,location:true,dataSaver:false,autoLock:true,showNumber:true }
+});
+let S = DEF();
+try { const raw = localStorage.getItem(KEY); if (raw) { const p = JSON.parse(raw); S = Object.assign(DEF(), p); S.set = Object.assign(DEF().set, p.set || {}); S.me = Object.assign(DEF().me, p.me || {}); } } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
-    // Desbloqueio e Bloqueio
-    function unlockPhone() {
-      const lockScreen = document.getElementById('lockscreen');
-      lockScreen.style.transform = 'translateY(-100%)';
-      lockScreen.style.opacity = '0';
-      isLocked = false;
-    }
+/* ================= Apps ================= */
+const APPS = [
+  { id: 'app-bank', name: 'CariocaPay', icon: 'fas fa-wallet', cls: 'bg-bank', kw: 'banco pix cairocapay capay dinheiro' },
+  { id: 'app-phone', name: 'Telefone', icon: 'fas fa-phone', cls: 'bg-phone', kw: 'ligar chamadas' },
+  { id: 'app-contacts', name: 'Contatos', icon: 'fas fa-address-book', cls: 'bg-contacts', kw: 'contatos agenda' },
+  { id: 'app-whatsapp', name: 'WhatsApp', icon: 'fab fa-whatsapp', cls: 'bg-whatsapp', kw: 'whatsapp mensagem status zap' },
+  { id: 'app-gps', name: 'GPS', icon: 'fas fa-map-marked-alt', cls: 'bg-gps', kw: 'mapa rota' },
+  { id: 'app-uber', name: 'Uber', icon: 'fas fa-car', cls: 'bg-uber', kw: 'corrida motorista' },
+  { id: 'app-services', name: 'Serviços', icon: 'fas fa-shield-alt', cls: 'bg-services', kw: 'polícia samu mecânico emergência' },
+  { id: 'app-camera', name: 'Câmera', icon: 'fas fa-camera', cls: 'bg-camera', kw: 'foto' },
+  { id: 'app-gallery', name: 'Galeria', icon: 'fas fa-images', cls: 'bg-gallery', kw: 'fotos' },
+  { id: 'app-music', name: 'Música', icon: 'fas fa-music', cls: 'bg-music', kw: 'rádio' },
+  { id: 'app-olx', name: 'OLX', icon: 'fas fa-shopping-bag', cls: 'bg-olx', kw: 'vendas compras anúncios' },
+  { id: 'app-browser', name: 'Internet', icon: 'fas fa-globe', cls: 'bg-browser', kw: 'navegador site' },
+  { id: 'app-settings', name: 'Ajustes', icon: 'fas fa-cog', cls: 'bg-settings', kw: 'configurações perfil' }
+];
+const appIcon = (a, label) => `<div class="app-icon" data-act="openApp" data-app="${a.id}" data-name="${esc(a.name + ' ' + a.kw)}"><div class="icon-box ${a.cls}"><i class="${a.icon}"></i>${a.id === 'app-whatsapp' ? '<span class="badge" data-wabadge></span>' : ''}</div>${label ? `<span class="app-name">${a.name}</span>` : ''}</div>`;
+$('app-grid').innerHTML = APPS.map(a => appIcon(a, true)).join('') + '<div class="no-results" id="no-results">Nenhum app encontrado</div>';
+$('dock').innerHTML = ['app-phone', 'app-whatsapp', 'app-camera', 'app-bank'].map(id => appIcon(APPS.find(a => a.id === id), false)).join('');
 
-    function lockPhone() {
-      const lockScreen = document.getElementById('lockscreen');
-      lockScreen.style.transform = 'translateY(0)';
-      lockScreen.style.opacity = '1';
-      isLocked = true;
-      closeDrawer();
-    }
+/* ================= Relógio / Toast ================= */
+function updateClock() {
+  const n = new Date(), t = `${pad2(n.getHours())}:${pad2(n.getMinutes())}`;
+  document.querySelectorAll('.clock-txt').forEach(e => e.textContent = t);
+  const d = n.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.querySelectorAll('.date-txt').forEach(e => e.textContent = d);
+}
+setInterval(updateClock, 1000); updateClock();
+let toastTimer;
+function toast(msg, type = '') {
+  if (!S.set.notif && type === '') return;
+  const el = $('toast'); el.textContent = msg; el.className = 'toast show ' + type;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+const offline = () => { if (S.set.plane) { toast('Sem sinal (modo avião)', 'err'); return true; } return false; };
 
-    // Controle da Gaveta de Apps (App Drawer)
-    function openDrawer() {
-      if (isLocked || activeAppId) return;
-      document.getElementById('app-drawer').classList.add('open');
-      isDrawerOpen = true;
-    }
+/* ================= Camadas (subtelas e overlays) ================= */
+const layers = [];
+let isLocked = true, isDrawerOpen = false, activeAppId = null;
+function setNavTheme() {
+  const app = activeAppId ? $(activeAppId) : null;
+  $('nav-bar').classList.toggle('dark', !!app && !app.classList.contains('dark') && !layers.some(l => l.overlay));
+}
+function openSub(app, html, cls = 'pad', onClose) {
+  const s = $('sub-' + app); s.className = 'sub show ' + cls; s.innerHTML = html;
+  layers.push({ el: s, onClose, app }); setNavTheme(); s.scrollTop = 0;
+}
+function openOverlay(el, onClose) { el.classList.add('show'); layers.push({ el, overlay: true, onClose }); setNavTheme(); }
+function closeTop() {
+  const l = layers.pop(); if (!l) return false;
+  l.el.classList.remove('show'); if (l.onClose) l.onClose(); setNavTheme(); return true;
+}
+function clearLayers() { while (layers.length) closeTop(); }
+const subOpen = (app) => layers.some(l => l.app === app);
 
-    function closeDrawer() {
-      document.getElementById('app-drawer').classList.remove('open');
-      isDrawerOpen = false;
-    }
+function unlockPhone() { const l = $('lockscreen'); l.style.transform = 'translateY(-100%)'; l.style.opacity = '0'; isLocked = false; }
+function lockPhone() { goHome(); const l = $('lockscreen'); l.style.transform = 'translateY(0)'; l.style.opacity = '1'; isLocked = true; }
+function openDrawer() { if (isLocked || activeAppId) return; $('app-drawer').classList.add('open'); isDrawerOpen = true; }
+function closeDrawer() { $('app-drawer').classList.remove('open'); isDrawerOpen = false; $('app-search').value = ''; filterApps(''); }
+function openApp(id) {
+  if (isLocked) return;
+  if (id === 'app-contacts') { openApp('app-phone'); phoneTab = 'contacts'; renderPhone(); return; }
+  if (activeAppId) { clearLayers(); $(activeAppId).classList.remove('show'); }
+  if (isDrawerOpen) closeDrawer();
+  activeAppId = id; $(id).classList.add('show'); setNavTheme();
+  ({ 'app-bank': renderBank, 'app-gps': renderGps, 'app-uber': renderUber, 'app-services': renderServices, 'app-camera': renderCamera, 'app-gallery': renderGallery, 'app-music': renderMusic, 'app-olx': renderOlx, 'app-browser': renderBrowser, 'app-settings': renderSettings, 'app-phone': renderPhone, 'app-whatsapp': renderWA })[id]?.();
+}
+function closeCurrentApp() { if (!activeAppId) return; clearLayers(); $(activeAppId).classList.remove('show'); activeAppId = null; setNavTheme(); }
+function goBack() { if (isLocked) return; if (layers.length) closeTop(); else if (activeAppId) closeCurrentApp(); else if (isDrawerOpen) closeDrawer(); }
+function goHome() { if (isLocked && !activeAppId) return; closeCurrentApp(); closeDrawer(); }
+function filterApps(q) {
+  q = q.trim().toLowerCase(); let n = 0;
+  document.querySelectorAll('#app-grid .app-icon').forEach(el => { const ok = !q || el.dataset.name.toLowerCase().includes(q); el.style.display = ok ? '' : 'none'; if (ok) n++; });
+  $('no-results').style.display = n ? 'none' : 'block';
+}
+$('app-search').addEventListener('input', e => filterApps(e.target.value));
 
-    // Suporte para Gestos de Arrastar (Swipe) no Mouse/Touch
-    let startY = 0;
-    const screenEl = document.getElementById('touch-area');
+/* Botão lateral: clique = bloquear/desbloquear • segurar = fechar */
+(function () {
+  const b = $('btn-power'); let t, long = false;
+  b.addEventListener('pointerdown', () => { long = false; t = setTimeout(() => { long = true; closePhoneHTML(); }, 700); });
+  b.addEventListener('pointerleave', () => clearTimeout(t));
+  b.addEventListener('pointerup', () => { clearTimeout(t); if (!long) (isLocked ? unlockPhone() : lockPhone()); });
+})();
+function closePhoneHTML() {
+  if (window.Android && typeof window.Android.sendCommand === 'function') window.Android.sendCommand('/close_cell');
+  else document.querySelector('.phone-chassis').style.display = 'none';
+}
+/* Gestos */
+(function () {
+  const area = $('touch-area'); let sy = null;
+  area.addEventListener('pointerdown', e => { sy = e.clientY; });
+  area.addEventListener('pointerup', e => {
+    if (sy === null) return; const diff = (sy - e.clientY) / 0.42; sy = null;
+    if (diff > 50) { if (isLocked) unlockPhone(); else if (!isDrawerOpen && !activeAppId) openDrawer(); }
+    else if (diff < -50 && isDrawerOpen) closeDrawer();
+  });
+})();
 
-    screenEl.addEventListener('mousedown', (e) => startY = e.clientY);
-    screenEl.addEventListener('mouseup', (e) => {
-      const diffY = startY - e.clientY;
-      if (diffY > 40) { // Arrastou para cima
-        if (isLocked) unlockPhone();
-        else if (!isDrawerOpen && !activeAppId) openDrawer();
-      } else if (diffY < -40) { // Arrastou para baixo
-        if (isDrawerOpen) closeDrawer();
-      }
+/* ================= Modal genérico ================= */
+function fieldHTML(f) {
+  const lab = f.label ? `<label>${f.label}</label>` : '';
+  if (f.type === 'select') return `${lab}<select class="input-field" id="mf-${f.id}">${f.options.map(o => `<option value="${esc(o.v)}">${esc(o.t)}</option>`).join('')}</select>`;
+  if (f.type === 'area') return `${lab}<textarea class="input-field" id="mf-${f.id}" placeholder="${esc(f.ph || '')}" maxlength="${f.max || 200}">${esc(f.val || '')}</textarea>`;
+  if (f.type === 'colors') return `${lab}<div class="colors" id="mf-${f.id}" data-val="${STORY_COLORS[0]}">${STORY_COLORS.map((c, i) => `<span class="${i ? '' : 'sel'}" style="background:${c}" data-act="pickColor" data-c="${c}"></span>`).join('')}</div>`;
+  return `${lab}<input class="input-field" id="mf-${f.id}" type="${f.type || 'text'}" placeholder="${esc(f.ph || '')}" value="${esc(f.val || '')}" maxlength="${f.max || 60}" ${f.min !== undefined ? `min="${f.min}"` : ''}>`;
+}
+function ask(title, fields, okText, cb, sub) {
+  $('modal-card').innerHTML = `<h4>${title}</h4>${sub ? `<p>${sub}</p>` : ''}${fields.map(fieldHTML).join('')}<div class="m-row"><button class="m-btn" data-act="mClose">Cancelar</button><button class="m-btn ok" id="m-ok">${okText}</button></div>`;
+  openOverlay($('modal-ov'));
+  $('m-ok').onclick = () => {
+    const vals = {}; let bad = false;
+    fields.forEach(f => {
+      const el = $('mf-' + f.id); const v = f.type === 'colors' ? el.dataset.val : el.value.trim();
+      el.classList.remove('error');
+      if (f.req && !v) { bad = true; el.classList.add('error'); }
+      vals[f.id] = v;
     });
+    if (bad) return; closeTop(); cb(vals);
+  };
+  const first = $('modal-card').querySelector('input,textarea'); if (first) setTimeout(() => first.focus(), 60);
+}
+const confirmBox = (title, text, ok, cb) => ask(title, [], ok, cb, text);
+function shake(id) { const el = $(id); if (!el) return; el.classList.remove('error'); void el.offsetWidth; el.classList.add('error'); el.focus(); }
 
-    // Abertura e Fechamento de Apps
-    function openApp(id) {
-      if(isLocked) return;
-      activeAppId = id;
-      const app = document.getElementById(id);
-      if(app) app.style.display = 'flex';
-    }
+/* ================= CARIOCAPAY ================= */
+function addTx(t, title, val) { S.txs.unshift({ t, title, val, ts: Date.now() }); if (S.txs.length > 80) S.txs.pop(); }
+const txRow = (x) => `<div class="row" style="cursor:default"><div class="ic" style="background:${x.t === 'in' ? '#1b5e20' : '#8a0000'}"><i class="fas ${x.t === 'in' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i></div><div class="grow"><b>${esc(x.title)}</b><small>${hm(x.ts)}</small></div><span class="${x.t === 'in' ? 'in' : 'out'}">${x.t === 'in' ? '+' : '-'} R$ ${money(x.val)}</span></div>`;
+function renderBank() {
+  $('c-bank').innerHTML = `
+    <div class="cp-hero"><i class="fas ${S.hide ? 'fa-eye-slash' : 'fa-eye'} eye" data-act="bankEye"></i><small>Olá, ${esc(S.me.name)}</small><br><small>Saldo disponível</small>
+      <h2>${S.hide ? 'R$ ••••••' : 'R$ ' + money(S.balance)}</h2><small>Conta ${esc(S.me.id)} • CariocaPay</small></div>
+    <div class="cp-grid">
+      <div class="cp-act" data-act="bankPix"><i class="fas fa-bolt"></i>Pix</div>
+      <div class="cp-act" data-act="bankCharge"><i class="fas fa-hand-holding-dollar"></i>Cobrar</div>
+      <div class="cp-act" data-act="bankStatement"><i class="fas fa-receipt"></i>Extrato</div>
+      <div class="cp-act" data-act="bankCard"><i class="fas fa-credit-card"></i>Cartão</div>
+      <div class="cp-act" data-act="bankSavings"><i class="fas fa-piggy-bank"></i>Cofrinho</div>
+      <div class="cp-act" data-act="bankKeys"><i class="fas fa-key"></i>Chaves</div>
+    </div>
+    <div class="section-title">Últimas transações</div>
+    ${S.txs.slice(0, 4).map(txRow).join('') || '<div class="empty"><i class="fas fa-receipt"></i>Nenhuma transação ainda</div>'}`;
+}
+function setBalance(n) { S.balance = Number(n); save(); if (activeAppId === 'app-bank') { renderBank(); } }
+function doPix(id, val, msg) {
+  if (offline()) return;
+  if (val > S.balance) return toast('Saldo insuficiente', 'err');
+  if (String(id) === String(S.me.id)) return toast('Você não pode enviar Pix para si mesmo', 'err');
+  S.balance -= val; addTx('out', `Pix para ID ${id}${msg ? ' • ' + msg : ''}`, val); save();
+  emit('phone:sendPix', id, val); toast(`Pix de R$ ${money(val)} enviado!`, 'ok'); closeTop(); renderBank();
+}
+function bankPixForm() {
+  openSub('bank', `<h3 style="margin-bottom:12px"><i class="fas fa-bolt" style="color:var(--red2)"></i> Enviar Pix</h3>
+    <input type="number" id="pix-id" class="input-field" placeholder="ID do jogador / chave" min="0">
+    <input type="number" id="pix-val" class="input-field" placeholder="Valor (R$)" min="1">
+    <input type="text" id="pix-msg" class="input-field" placeholder="Mensagem (opcional)" maxlength="40">
+    <div style="font-size:11px;color:#888;margin-bottom:4px">Saldo: R$ ${money(S.balance)}</div>
+    <button class="btn-action" style="background:linear-gradient(90deg,#e10600,#8a0000)" data-act="pixGo"><i class="fas fa-paper-plane"></i> Continuar</button>`);
+}
+function bankCardView() {
+  const num = ('5412' + String(S.me.id).padStart(4, '0')).slice(0, 8);
+  const used = S.fatura, avail = S.limit - used;
+  return `<div class="vcard ${S.cardBlocked ? 'blocked' : ''}"><div style="display:flex;justify-content:space-between"><b><i class="fas fa-wallet"></i> CariocaPay</b><i class="fas fa-wifi" style="transform:rotate(90deg)"></i></div>
+      <div style="font-size:18px;letter-spacing:2px">${num.slice(0, 4)} ${num.slice(4)}•• ••••</div><div style="display:flex;justify-content:space-between;font-size:12px"><span>${esc(S.me.name.toUpperCase())}</span><span>Black</span></div></div>
+    <div class="section-title">Limite do cartão</div><div class="row" style="display:block;cursor:default"><div style="display:flex;justify-content:space-between"><span>Disponível</span><b>R$ ${money(avail)}</b></div><div class="bar"><div style="width:${Math.min(100, used / S.limit * 100)}%"></div></div><small>Fatura atual: R$ ${money(used)} • Limite: R$ ${money(S.limit)}</small></div>
+    <button class="btn-action" style="background:linear-gradient(90deg,#e10600,#8a0000)" data-act="payInvoice"><i class="fas fa-file-invoice-dollar"></i> Pagar fatura</button>
+    <button class="btn-action" style="background:#26262c" data-act="toggleCard"><i class="fas ${S.cardBlocked ? 'fa-lock-open' : 'fa-lock'}"></i> ${S.cardBlocked ? 'Desbloquear cartão' : 'Bloquear cartão'}</button>`;
+}
+function savingsView() {
+  return `<div class="cp-hero"><small>Cofrinho Cairo</small><h2>R$ ${money(S.savings)}</h2><small>Dinheiro guardado com segurança</small></div>
+    <button class="btn-action" style="background:linear-gradient(90deg,#e10600,#8a0000)" data-act="saveIn"><i class="fas fa-arrow-down"></i> Guardar dinheiro</button>
+    <button class="btn-action" style="background:#26262c" data-act="saveOut"><i class="fas fa-arrow-up"></i> Resgatar dinheiro</button>`;
+}
+function keysView() {
+  const all = [{ k: 'ID ' + S.me.id, t: 'Chave ID (automática)', ic: 'fa-id-badge' }, ...S.keys];
+  return `<h3 style="margin-bottom:10px"><i class="fas fa-key" style="color:var(--red2)"></i> Minhas chaves Pix</h3>` +
+    all.map((k, i) => `<div class="row" style="cursor:default"><div class="ic" style="background:#8a0000"><i class="fas ${k.ic || 'fa-key'}"></i></div><div class="grow"><b>${esc(k.k)}</b><small>${esc(k.t)}</small></div>${i ? `<i class="fas fa-trash" style="color:#ff5a4f;cursor:pointer;padding:8px" data-act="delKey" data-i="${i - 1}"></i>` : ''}</div>`).join('') +
+    `<button class="btn-action" style="background:linear-gradient(90deg,#e10600,#8a0000)" data-act="addKey"><i class="fas fa-plus"></i> Cadastrar chave</button>`;
+}
 
-    function closeCurrentApp() {
-      if (activeAppId) {
-        document.getElementById(activeAppId).style.display = 'none';
-        activeAppId = null;
-      } else if (isDrawerOpen) {
-        closeDrawer();
-      }
-    }
+/* ================= GPS ================= */
+const PLACES = [
+  { n: 'Prefeitura', k: 'Prefeitura', i: 'fa-landmark' }, { n: 'Banco Principal', k: 'Banco Principal', i: 'fa-building-columns' },
+  { n: 'Concessionária', k: 'Concessionaria', i: 'fa-car-side' }, { n: 'DP - Polícia', k: 'DP Policia', i: 'fa-shield-halved' },
+  { n: 'Hospital Central', k: 'Hospital', i: 'fa-hospital' }, { n: 'Oficina Mecânica', k: 'Oficina', i: 'fa-wrench' },
+  { n: 'Aeroporto', k: 'Aeroporto', i: 'fa-plane-departure' }, { n: 'Praia', k: 'Praia', i: 'fa-umbrella-beach' }
+];
+let gpsDest = null, gpsQ = '';
+function renderGps() {
+  const list = PLACES.filter(p => p.n.toLowerCase().includes(gpsQ.toLowerCase()));
+  $('c-gps').innerHTML = `
+    ${gpsDest ? `<div class="row" style="background:#fdecea;border-color:#f5b5ae;cursor:default"><div class="ic" style="background:#e53935"><i class="fas fa-route"></i></div><div class="grow"><b>Rota ativa</b><small>${esc(gpsDest)}</small></div><button class="btn-small red" data-act="gpsClear">Cancelar</button></div>` : ''}
+    <input class="input-field" id="gps-q" placeholder="🔍 Buscar local..." value="${esc(gpsQ)}">
+    <div class="section-title">Locais de interesse</div>
+    ${list.map(p => `<div class="row" data-act="gpsSet" data-k="${esc(p.k)}" data-n="${esc(p.n)}"><div class="ic" style="background:#e53935"><i class="fas ${p.i}"></i></div><div class="grow"><b>${p.n}</b><small>Toque para traçar rota</small></div><i class="fas fa-location-arrow" style="color:#e53935"></i></div>`).join('') || '<div class="empty"><i class="fas fa-map-pin"></i>Nenhum local encontrado</div>'}
+    <button class="btn-action" style="background:#e53935" data-act="gpsHere"><i class="fas fa-crosshairs"></i> Marcar minha posição</button>`;
+  const q = $('gps-q'); q.addEventListener('input', e => { gpsQ = e.target.value; const pos = e.target.selectionStart; renderGps(); const n = $('gps-q'); n.focus(); n.setSelectionRange(pos, pos); });
+}
 
-    function pressHomeButton() {
-      if (activeAppId) {
-        closeCurrentApp();
-      } else if (isDrawerOpen) {
-        closeDrawer();
-      } else if (!isLocked) {
-        lockPhone();
-      }
-    }
+/* ================= UBER ================= */
+let ride = 'UberX', tripTimer = null;
+const RIDES = [{ n: 'UberX', ic: 'fa-car', d: 'Econômico • 3 min', p: 15 }, { n: 'Comfort', ic: 'fa-car-on', d: 'Mais espaço • 5 min', p: 25 }, { n: 'Moto', ic: 'fa-motorcycle', d: 'Mais rápido • 2 min', p: 9 }];
+function renderUber() {
+  $('c-uber').innerHTML = `<h3 style="margin-bottom:10px"><i class="fas fa-location-dot"></i> Para onde você quer ir?</h3>
+    <input type="text" id="uber-dest" class="input-field" placeholder="Endereço ou local..." maxlength="60">
+    ${RIDES.map(r => `<div class="row ride-opt ${r.n === ride ? 'selected' : ''}" data-act="pickRide" data-r="${r.n}"><div class="ic" style="background:#000"><i class="fas ${r.ic}"></i></div><div class="grow"><b>${r.n}</b><small>${r.d}</small></div><b>R$ ${r.p}</b></div>`).join('')}
+    <div style="font-size:11px;color:#888;margin:4px 0">Pagamento: CariocaPay</div>
+    <button class="btn-action" style="background:#000" data-act="uberGo"><i class="fas fa-car"></i> Solicitar Viagem</button>
+    <div class="section-title">Viagens recentes</div>
+    ${S.trips.slice(0, 5).map(t => `<div class="row" style="cursor:default"><div class="ic" style="background:#333"><i class="fas fa-route"></i></div><div class="grow"><b>${esc(t.dest)}</b><small>${t.ride} • ${hm(t.ts)}</small></div><b>R$ ${t.price}</b></div>`).join('') || '<div class="empty"><i class="fas fa-clock-rotate-left"></i>Nenhuma viagem ainda</div>'}`;
+}
+function startTrip(dest) {
+  const r = RIDES.find(x => x.n === ride); const trip = { dest, ride, price: r.p, driver: ['Carlos', 'Marcos', 'Ana', 'Rafael', 'Júlia'][rnd(0, 4)], plate: `${String.fromCharCode(rnd(65, 90))}${String.fromCharCode(rnd(65, 90))}${String.fromCharCode(rnd(65, 90))}-${rnd(1000, 9999)}`, step: 0 };
+  const draw = () => {
+    const s = ['Procurando motorista...', 'Motorista a caminho', 'Motorista chegou!'][trip.step];
+    const sub = $('sub-uber'); if (!sub.classList.contains('show')) return;
+    sub.innerHTML = `<div style="text-align:center;padding:10px 0"><i class="fas fa-car-side" style="font-size:44px"></i><h3 style="margin-top:10px">${s}</h3><small style="color:#777">${esc(dest)}</small></div><div class="pbar"><div style="width:${(trip.step + 1) * 33}%"></div></div>
+      ${trip.step ? `<div class="row" style="cursor:default">${av(trip.driver)}<div class="grow"><b>${trip.driver}</b><small>${r.n} • ${trip.plate}</small></div><b>R$ ${r.p}</b></div>` : ''}
+      ${trip.step === 2 ? `<button class="btn-action" style="background:#000" data-act="tripEnd">Finalizar viagem</button>` : ''}
+      <button class="btn-action" style="background:#d32f2f" data-act="tripCancel"><i class="fas fa-xmark"></i> Cancelar</button>`;
+  };
+  openSub('uber', '', 'pad', () => { clearInterval(tripTimer); }); draw();
+  clearInterval(tripTimer); tripTimer = setInterval(() => { if (trip.step < 2) { trip.step++; draw(); } else clearInterval(tripTimer); }, 3500);
+  trip.finish = () => {
+    clearInterval(tripTimer);
+    if (S.balance >= trip.price) { S.balance -= trip.price; addTx('out', `Uber • ${dest}`, trip.price); toast(`Viagem paga: R$ ${trip.price}`, 'ok'); } else toast('Saldo insuficiente. Pague em dinheiro ao motorista.', 'err');
+    S.trips.unshift({ dest, ride: trip.ride, price: trip.price, ts: Date.now() }); save(); closeTop(); renderUber();
+  };
+  window._trip = trip; emit('phone:callUber', dest, ride);
+}
 
-    // FECHA O HTML DIRETO SEM EMITIR TOAST OU AVISOS
-    function closePhoneHTML() {
-      if(window.Android && typeof window.Android.sendCommand === 'function') {
-        window.Android.sendCommand('/close_cell');
-      } else {
-        document.querySelector('.phone-chassis').style.display = 'none';
-      }
-    }
+/* ================= SERVIÇOS ================= */
+const SERVICES = [{ n: 'Polícia', num: '190', ic: 'fa-shield-alt', c: '#1976d2' }, { n: 'SAMU', num: '192', ic: 'fa-ambulance', c: '#d32f2f' }, { n: 'Bombeiros', num: '193', ic: 'fa-fire-extinguisher', c: '#e65100' }, { n: 'Mecânico', num: '', ic: 'fa-wrench', c: '#f57c00' }, { n: 'Táxi', num: '', ic: 'fa-taxi', c: '#fbc02d' }];
+function renderServices() {
+  $('c-services').innerHTML = SERVICES.map(s => `<div class="row" data-act="callService" data-t="${s.n}"><div class="ic" style="background:${s.c}"><i class="fas ${s.ic}"></i></div><div class="grow"><b>${s.n}${s.num ? ` (${s.num})` : ''}</b><small>Toque para chamar</small></div><i class="fas fa-chevron-right" style="color:#bbb"></i></div>`).join('') +
+    `<div class="section-title">Chamados recentes</div>` + (S.services.slice(0, 6).map(c => `<div class="row" style="cursor:default"><div class="ic" style="background:#607d8b"><i class="fas fa-clock"></i></div><div class="grow"><b>${esc(c.t)}</b><small>${esc(c.d || 'Sem descrição')} • ${hm(c.ts)}</small></div></div>`).join('') || '<div class="empty"><i class="fas fa-bell-slash"></i>Nenhum chamado</div>');
+}
 
-    // LÓGICA DOS APPS COM O CLIENTE SAMP
-    const appActions = {
-      sendPix: () => {
-        const id = document.getElementById('pix-id').value;
-        const val = document.getElementById('pix-val').value;
-        if(id && val && window.cef) cef.emit('phone:sendPix', id, val);
-      },
-      setGps: (location) => {
-        if(window.cef) cef.emit('phone:setGps', location);
-      },
-      callUber: () => {
-        const dest = document.getElementById('uber-dest').value;
-        if(dest && window.cef) cef.emit('phone:callUber', dest);
-      },
-      callService: (type) => {
-        if(window.cef) cef.emit('phone:callService', type);
-      },
-      snapPhoto: () => {
-        if(window.cef) cef.emit('phone:takePhoto');
-      },
-      toggleMusic: () => {
-        const title = document.getElementById('song-title');
-        title.innerText = title.innerText.includes('Nenhuma') ? "Tocando: Rádio Los Santos" : "Nenhuma música tocando";
-        if(window.cef) cef.emit('phone:toggleMusic');
-      },
-      buyOlx: (item) => {
-        if(window.cef) cef.emit('phone:buyOlx', item);
-      },
-      makeCall: () => {
-        const num = document.getElementById('phone-num').value;
-        if(num && window.cef) cef.emit('phone:call', num);
-      },
-      sendWhatsapp: () => {
-        const num = document.getElementById('wa-num').value;
-        const msg = document.getElementById('wa-msg').value;
-        if(num && msg && window.cef) cef.emit('phone:sendWhatsapp', num, msg);
-      }
-    };
-  </script>
+/* ================= CÂMERA / GALERIA ================= */
+let camFlash = false, camSelfie = false;
+function renderCamera() {
+  $('c-camera').innerHTML = `<div class="viewfinder"><i class="fas ${camSelfie ? 'fa-user' : 'fa-mountain-sun'}"></i></div>
+    <div class="cam-ctrls"><div class="cam-btn ${camFlash ? 'on' : ''}" data-act="camFlash"><i class="fas fa-bolt"></i></div><div class="shutter" data-act="snap"><div></div></div><div class="cam-btn" data-act="camFlip"><i class="fas fa-rotate"></i></div></div>`;
+}
+function renderGallery() {
+  $('gal-count').textContent = S.photos.length + (S.photos.length === 1 ? ' foto' : ' fotos');
+  $('c-gallery').innerHTML = S.photos.length ? `<div class="gal-grid">${S.photos.map(p => `<div class="gal-item" style="background:linear-gradient(135deg,${p.c1},${p.c2})" data-act="viewPhoto" data-id="${p.id}"><span>${esc(p.name)}</span></div>`).join('')}</div>` : '<div class="empty"><i class="fas fa-image"></i>Nenhuma foto.<br>Tire uma na Câmera!</div>';
+}
+
+/* ================= MÚSICA ================= */
+const STATIONS = ['Rádio Los Santos', 'K-DST Classic Rock', 'Funk do Morro FM', 'Lo-Fi Carioca Roleplay', 'Pagode da Quebrada'];
+let station = 0, playing = false, volume = 70;
+function renderMusic() {
+  $('c-music').innerHTML = `<div class="music-hero"><div class="music-cover"><i class="fas fa-music"></i></div>
+    <small style="color:#1ed760;font-weight:800">CARIOCA MUSIC</small>
+    <h2 style="font-size:20px;margin:5px 0">${playing ? esc(STATIONS[station]) : 'Sua música, seu momento'}</h2>
+    <div style="font-size:11px;color:#bbb">${playing ? 'Reprodução em andamento' : 'Escolha uma estação para começar'}</div>
+    <div class="music-controls"><button data-act="musPrev"><i class="fas fa-backward-step"></i></button>
+    <button class="play" data-act="musToggle"><i class="fas ${playing ? 'fa-pause' : 'fa-play'}"></i></button>
+    <button data-act="musNext"><i class="fas fa-forward-step"></i></button></div>
+    <div style="display:flex;gap:9px;align-items:center"><i class="fas fa-volume-low"></i><input type="range" id="vol" min="0" max="100" value="${volume}" style="flex:1;accent-color:#1ed760"><i class="fas fa-volume-high"></i></div></div>
+    <div class="section-title">Estações para você</div>
+    <div class="music-list">${STATIONS.map((n,i)=>`<div class="row ${i===station?'active':''}" data-act="musPick" data-i="${i}">
+    <div class="ic" style="background:linear-gradient(135deg,#e10600,#330000)"><i class="fas fa-music"></i></div>
+    <div class="grow"><b>${esc(n)}</b><small>Rádio • Carioca Music</small></div>
+    <i class="fas fa-${i===station&&playing?'volume-high':'play'}" style="color:#1db954"></i></div>`).join('')}</div>
+    <div class="section-title">Sua biblioteca</div>
+    <div class="row" style="cursor:default"><div class="ic" style="background:#7b1fa2"><i class="fas fa-heart"></i></div><div class="grow"><b>Músicas curtidas</b><small>Suas favoritas em um só lugar</small></div></div>
+    <div class="row" style="cursor:default"><div class="ic" style="background:#1565c0"><i class="fas fa-list"></i></div><div class="grow"><b>Playlists</b><small>Organize suas estações preferidas</small></div></div>`;
+  $('vol').addEventListener('input',e=>{volume=+e.target.value;emit('phone:setVolume',volume);});
+}
+function musicSet(i, play) { station = (i + STATIONS.length) % STATIONS.length; playing = play; emit('phone:toggleMusic', STATIONS[station]); renderMusic(); }
+
+/* ================= OLX ================= */
+let olxTab = 'buy';
+function renderOlx() {
+  const mine = S.ads.filter(a => a.mine), other = S.ads.filter(a => !a.mine);
+  $('c-olx').innerHTML = `<div class="tabs"><div class="tab ${olxTab === 'buy' ? 'on' : ''}" data-act="olxTab" data-t="buy"><i class="fas fa-bag-shopping"></i> Comprar</div><div class="tab ${olxTab === 'sell' ? 'on' : ''}" data-act="olxTab" data-t="sell"><i class="fas fa-tag"></i> Meus anúncios</div></div><div class="tab-body">` +
+    (olxTab === 'buy' ? (other.map(adRow).join('') || '<div class="empty"><i class="fas fa-store-slash"></i>Sem anúncios</div>')
+      : `<button class="btn-action" style="background:#7b1fa2;margin:0 0 12px" data-act="olxNew"><i class="fas fa-plus"></i> Criar anúncio</button>` + (mine.map(a => `<div class="row" style="cursor:default"><div class="ic" style="background:#7b1fa2"><i class="fas fa-tag"></i></div><div class="grow"><b>${esc(a.title)}</b><small>R$ ${money(a.price)}</small></div><i class="fas fa-trash" style="color:#d32f2f;padding:8px;cursor:pointer" data-act="olxDel" data-id="${a.id}"></i></div>`).join('') || '<div class="empty"><i class="fas fa-tags"></i>Você não tem anúncios</div>')) + '</div>';
+}
+const adRow = (a) => `<div class="row" data-act="olxBuy" data-id="${a.id}"><div class="ic" style="background:#7b1fa2"><i class="fas fa-box"></i></div><div class="grow"><b>${esc(a.title)}</b><small>${esc(a.desc)} • ${esc(a.seller)}</small></div><div class="right"><b style="color:#7b1fa2;font-size:13px">R$ ${money(a.price)}</b></div></div>`;
+
+/* ================= NAVEGADOR ================= */
+const SITES = [{ n: 'Carioca Roleplay', u: 'cariocaroleplay.com', ic: 'fa-house', c: '#e10600', d: 'Site oficial do servidor. Regras, novidades e eventos.' }, { n: 'Discord', u: 'discord.gg/novaera', ic: 'fab fa-discord', c: '#5865f2', d: 'Comunidade oficial com suporte e avisos.' }, { n: 'Fórum', u: 'forum.cariocaroleplay.com', ic: 'fa-comments', c: '#00897b', d: 'Fóruns de denúncia, facções e sugestões.' }, { n: 'Loja VIP', u: 'loja.cariocaroleplay.com', ic: 'fa-crown', c: '#f9a825', d: 'Benefícios VIP e pacotes.' }, { n: 'Notícias SA', u: 'noticias.sa', ic: 'fa-newspaper', c: '#546e7a', d: 'Últimas notícias de San Andreas.' }];
+function renderBrowser() {
+  $('c-browser').innerHTML = `<div style="display:flex;gap:6px"><input class="input-field" id="url-input" placeholder="Pesquisar ou digitar URL" style="margin:0"><button class="btn-small red" data-act="webGo"><i class="fas fa-arrow-right"></i></button></div>
+    <div class="section-title">Favoritos</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">${SITES.map((s, i) => `<div style="text-align:center;font-size:11px;cursor:pointer" data-act="webOpen" data-i="${i}"><div class="ic" style="background:${s.c};margin:0 auto 4px;width:48px;height:48px"><i class="${s.ic.startsWith('fa-') ? 'fas ' + s.ic : s.ic}"></i></div>${s.n}</div>`).join('')}</div>
+    <div class="section-title">Histórico</div>${S.history.slice(0, 6).map(h => `<div class="row" data-act="webQ" data-q="${esc(h)}"><i class="fas fa-clock-rotate-left" style="color:#999"></i><div class="grow">${esc(h)}</div></div>`).join('') || '<div class="empty"><i class="fas fa-clock"></i>Sem histórico</div>'}`;
+}
+function webPage(title, url, body) {
+  if (S.set.plane || !S.set.wifi) return toast('Sem conexão com a internet', 'err');
+  S.history = [url, ...S.history.filter(h => h !== url)].slice(0, 12); save();
+  openSub('browser', `<div class="row" style="cursor:default"><i class="fas fa-lock" style="color:#2e7d32"></i><div class="grow"><small>${esc(url)}</small></div></div><h2 style="margin:10px 0">${esc(title)}</h2><p style="font-size:13px;line-height:1.5;color:#555">${esc(body)}</p>`);
+}
+
+/* ================= AJUSTES ================= */
+function renderSettings() {
+ const t=(id,ic,label,on,desc='')=>`<div class="row" style="cursor:default"><div class="ic" style="width:34px;height:34px;background:#546e7a;font-size:14px"><i class="fas ${ic}"></i></div><div class="grow"><b>${label}</b><small>${desc}</small></div><label class="toggle"><input type="checkbox" data-set="${id}" ${on?'checked':''}><span></span></label></div>`;
+ $('c-settings').innerHTML=`<div class="row" data-act="editProfile">${av(S.me.name,54)}<div class="grow"><b>${esc(S.me.name)}</b><small>Telefone ${esc(S.me.num)} • ID ${esc(S.me.id)}</small></div><i class="fas fa-pen"></i></div>
+ <div class="setting-group"><i class="fas fa-wifi"></i> CONEXÕES</div>
+ ${t('plane','fa-plane','Modo avião',S.set.plane,'Desativa conexões do aparelho')}
+ ${t('wifi','fa-wifi','Wi-Fi',S.set.wifi,'Conexão com a internet')}
+ ${t('bt','fa-bluetooth-b','Bluetooth',S.set.bt,'Dispositivos próximos')}
+ ${t('location','fa-location-dot','Localização',S.set.location,'Permitir localização no GPS')}
+ ${t('dataSaver','fa-gauge-high','Economia de dados',S.set.dataSaver,'Reduzir uso de dados')}
+ <div class="setting-group"><i class="fas fa-bell"></i> SOM E NOTIFICAÇÕES</div>
+ ${t('notif','fa-bell','Notificações',S.set.notif,'Alertas dos aplicativos')}
+ ${t('sound','fa-volume-high','Sons do sistema',S.set.sound,'Sons de toque e notificações')}
+ ${t('vibration','fa-mobile-screen-button','Vibração',S.set.vibration,'Resposta tátil')}
+ <div class="setting-group"><i class="fas fa-display"></i> TELA E PERSONALIZAÇÃO</div>
+ ${t('darkMode','fa-moon','Modo escuro',S.set.darkMode,'Aparência escura')}
+ <div class="row" style="display:block;cursor:default"><b><i class="fas fa-sun"></i> Brilho da tela</b><input type="range" id="set-bright" min="30" max="100" value="${S.set.bright}" style="width:100%;margin-top:8px;accent-color:#e10600"></div>
+ ${t('autoLock','fa-lock','Bloqueio automático',S.set.autoLock,'Bloquear ao sair do celular')}
+ <div class="setting-group"><i class="fas fa-user-shield"></i> PRIVACIDADE</div>
+ ${t('showNumber','fa-phone','Exibir meu número',S.set.showNumber,'Permitir que contatos vejam seu número')}
+ <div class="row" data-act="editProfile"><div class="ic" style="background:#1565c0"><i class="fas fa-id-card"></i></div><div class="grow"><b>Dados do perfil</b><small>Editar nome e telefone</small></div><i class="fas fa-chevron-right"></i></div>
+ <div class="setting-group"><i class="fas fa-circle-info"></i> SISTEMA</div>
+ <div class="row" style="cursor:default"><div class="ic" style="background:#00897b"><i class="fas fa-mobile-alt"></i></div><div class="grow"><b>Sobre o aparelho</b><small>Carioca Mobile • Sistema RP</small></div><span style="font-size:11px;color:#888">v2.0</span></div>
+ <button class="btn-action" style="background:#c62828" data-act="resetPhone"><i class="fas fa-trash"></i> Restaurar celular</button>`;
+ $('set-bright').addEventListener('input',e=>{S.set.bright=+e.target.value;applySettings();save();});
+}
+function applySettings() {
+  $('st-plane').style.display = S.set.plane ? '' : 'none';
+  $('st-wifi').style.display = (S.set.plane || !S.set.wifi) ? 'none' : '';
+  $('st-signal').style.display = S.set.plane ? 'none' : '';
+  $('touch-area').style.filter = `brightness(${S.set.bright / 100})`;
+}
+
+/* ================= CONTATOS / TELEFONE ================= */
+let phoneTab = 'dial', dialNum = '';
+const findContact = (num) => S.contacts.find(c => c.num === String(num));
+const nameOf = (num) => findContact(num)?.name || String(num);
+function renderPhone() {
+  const tab = (k, ic, l) => `<div class="tab ${phoneTab === k ? 'on' : ''}" data-act="phoneTab" data-t="${k}"><i class="fas ${ic}"></i> ${l}</div>`;
+  let body = '';
+  if (phoneTab === 'dial') {
+    body = `<div class="dial-display" id="dial-display"></div><div class="dial-name" id="dial-name"></div>
+      <div class="keypad">${['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map(k => `<button class="key" data-act="key" data-k="${k}">${k}</button>`).join('')}</div>
+      <div class="call-row"><button class="del-btn" data-act="saveDial" title="Salvar contato"><i class="fas fa-user-plus"></i></button><button class="call-btn" data-act="dialCall"><i class="fas fa-phone"></i></button><button class="del-btn" data-act="delKeyDial"><i class="fas fa-delete-left"></i></button></div>`;
+  } else if (phoneTab === 'recent') {
+    body = S.calls.slice(0, 30).map(c => `<div class="row" data-act="callNum" data-num="${esc(c.num)}"><div class="ic" style="background:${c.missed ? '#c62828' : '#2e7d32'}"><i class="fas ${c.missed ? 'fa-phone-slash' : c.out ? 'fa-arrow-up-right-from-square' : 'fa-arrow-down'}"></i></div><div class="grow"><b style="${c.missed ? 'color:#c62828' : ''}">${esc(nameOf(c.num))}</b><small>${c.out ? 'Realizada' : c.missed ? 'Perdida' : 'Recebida'} • ${hm(c.ts)}${c.dur ? ' • ' + fmtDur(c.dur) : ''}</small></div><i class="fas fa-phone" style="color:#2e7d32"></i></div>`).join('') || '<div class="empty"><i class="fas fa-phone-slash"></i>Sem chamadas recentes</div>';
+  } else {
+    body = `<button class="btn-action" style="background:#1565c0;margin:0 0 12px" data-act="addContact"><i class="fas fa-user-plus"></i> Novo contato</button>` +
+      ([...S.contacts].sort((a, b) => a.name.localeCompare(b.name)).map(c => `<div class="row" data-act="contactView" data-num="${esc(c.num)}">${av(c.name)}<div class="grow"><b>${esc(c.name)}</b><small>${esc(c.num)}</small></div><i class="fas fa-chevron-right" style="color:#bbb"></i></div>`).join('') || '<div class="empty"><i class="fas fa-address-book"></i>Nenhum contato salvo</div>');
+  }
+  $('c-phone').innerHTML = `<div class="tabs">${tab('dial', 'fa-grip', 'Teclado')}${tab('recent', 'fa-clock-rotate-left', 'Recentes')}${tab('contacts', 'fa-address-book', 'Contatos')}</div><div class="tab-body">${body}</div>`;
+  if (phoneTab === 'dial') updateDial();
+}
+const fmtDur = (s) => `${pad2(Math.floor(s / 60))}:${pad2(s % 60)}`;
+function updateDial() { const d = $('dial-display'); if (!d) return; d.textContent = dialNum; $('dial-name').textContent = dialNum ? (findContact(dialNum)?.name || '') : ''; }
+function contactView(num) {
+  const c = findContact(num); if (!c) return;
+  openSub('phone', `<div style="text-align:center">${av(c.name, 80)}<h2 style="margin:10px 0 2px">${esc(c.name)}</h2><small style="color:#777">${esc(c.num)}</small></div>
+    <button class="btn-action" style="background:#2e7d32" data-act="callNum" data-num="${esc(c.num)}"><i class="fas fa-phone"></i> Ligar</button>
+    <button class="btn-action" style="background:#25d366" data-act="chatWith" data-num="${esc(c.num)}"><i class="fab fa-whatsapp"></i> Enviar mensagem</button>
+    <button class="btn-action" style="background:#1565c0" data-act="editContact" data-num="${esc(c.num)}"><i class="fas fa-pen"></i> Editar</button>
+    <button class="btn-action" style="background:#c62828" data-act="delContact" data-num="${esc(c.num)}"><i class="fas fa-trash"></i> Excluir contato</button>`);
+}
+function addContact(name = '', num = '', after) {
+  ask('Novo contato', [{ id: 'name', label: 'Nome', ph: 'Ex: João', val: name, req: 1, max: 30 }, { id: 'num', label: 'Número de celular do jogador', ph: 'Digite o número de celular do outro jogador', val: num, req: 1, type: 'number', max: 12 }], 'Salvar', (v) => {
+    const n = v.num.replace(/\D/g, ''); if (!n) return toast('Número inválido', 'err');
+    const ex = findContact(n); if (ex) ex.name = v.name; else S.contacts.push({ name: v.name, num: n });
+    save(); toast('Contato salvo', 'ok'); if (after) after(); else if (activeAppId === 'app-phone') renderPhone();
+  });
+}
+
+/* Chamadas */
+let call = null;
+function renderCall() {
+  const ov = $('call-ov'); if (!call) return;
+  const st = call.state === 'on' ? fmtDur(Math.floor((Date.now() - call.t0) / 1000)) : call.state === 'in' ? 'Chamada recebida' : 'Chamando...';
+  ov.innerHTML = `<div><div class="av" style="background:${colorOf(nameOf(call.num))}">${esc(nameOf(call.num)[0].toUpperCase())}</div><h2>${esc(nameOf(call.num))}</h2><p>${esc(call.num)}</p><p>${st}</p></div>
+    <div class="call-ctrls">${call.state === 'in' ? `<button class="cbtn end" data-act="callDecline"><i class="fas fa-phone-slash"></i></button><button class="cbtn acc" data-act="callAccept"><i class="fas fa-phone"></i></button>` :
+      `<button class="cbtn ${call.mute ? 'on' : ''}" data-act="callMute"><i class="fas fa-microphone-slash"></i></button><button class="cbtn end" data-act="callEnd"><i class="fas fa-phone-slash"></i></button><button class="cbtn ${call.spk ? 'on' : ''}" data-act="callSpk"><i class="fas fa-volume-high"></i></button>`}</div>`;
+}
+function startCall(num) {
+  num = String(num).trim(); if (!num) return toast('Digite um número', 'err');
+  if (offline() || call) return;
+  call = { num, state: 'ring', dir: 'out' }; $('call-ov').classList.add('show'); renderCall(); emit('phone:call', num);
+  if (!window.cef) setTimeout(callAnswered, 2500);
+}
+function callAnswered() { if (!call || call.state === 'on') return; call.state = 'on'; call.t0 = Date.now(); clearInterval(call.timer); call.timer = setInterval(renderCall, 1000); renderCall(); }
+function endCall(send = true, missed = false) {
+  if (!call) return; clearInterval(call.timer);
+  const dur = call.t0 ? Math.floor((Date.now() - call.t0) / 1000) : 0;
+  S.calls.unshift({ num: call.num, out: call.dir === 'out', ts: Date.now(), dur, missed: missed || (call.dir === 'in' && !call.t0) }); S.calls = S.calls.slice(0, 50); save();
+  if (send) emit('phone:hangup', call.num); call = null; $('call-ov').classList.remove('show'); if (activeAppId === 'app-phone' && !subOpen('phone')) renderPhone(); if (activeAppId === 'app-whatsapp') renderWA();
+}
+
+/* ================= WHATSAPP ================= */
+let waTab = 'chats', curChat = null;
+const STORY_COLORS = ['#e10600', '#128c7e', '#6a1b9a', '#1565c0', '#ef6c00', '#212121'];
+const totalUnread = () => Object.values(S.unread).reduce((a, b) => a + b, 0);
+function updateBadge() { const n = totalUnread(); document.querySelectorAll('[data-wabadge]').forEach(b => { b.textContent = n; b.style.display = n ? 'flex' : 'none'; }); }
+const activeStories = (list) => (list || []).filter(s => Date.now() - s.ts < 864e5);
+function renderWA() {
+  const tab = (k, ic, l) => `<div class="tab ${waTab === k ? 'on' : ''}" data-act="waTab" data-t="${k}"><i class="fas ${ic}"></i> ${l}</div>`;
+  let body = '';
+  if (waTab === 'chats') {
+    const keys = Object.keys(S.chats).filter(k => S.chats[k].length).sort((a, b) => S.chats[b].at(-1).ts - S.chats[a].at(-1).ts);
+    body = keys.map(k => { const m = S.chats[k].at(-1), u = S.unread[k] || 0; return `<div class="row" data-act="openChat" data-num="${esc(k)}">${av(nameOf(k))}<div class="grow"><b>${esc(nameOf(k))}</b><small>${m.out ? '✓ ' : ''}${esc(m.text.slice(0, 34))}</small></div><div class="right">${hm(m.ts)}${u ? `<br><span class="unread">${u}</span>` : ''}</div></div>`; }).join('') || '<div class="empty"><i class="fas fa-comments"></i>Nenhuma conversa.<br>Toque no botão para começar!</div>';
+  } else if (waTab === 'status') {
+    const mine = activeStories(S.myStatus);
+    body = `<div class="row" data-act="${mine.length ? 'viewMyStatus' : 'addStatus'}"><div class="st-ring ${mine.length ? '' : 'seen'}" style="border-style:${mine.length ? 'solid' : 'dashed'}">${av(S.me.name, 44)}</div><div class="grow"><b>Meu status</b><small>${mine.length ? mine.length + ' atualização(ões) • ' + hm(mine.at(-1).ts) : 'Toque para adicionar'}</small></div><i class="fas fa-plus-circle" style="color:#25d366;font-size:22px" data-act="addStatus"></i></div>
+      <div class="section-title">Atualizações recentes</div>` +
+      (Object.keys(S.statuses).filter(k => activeStories(S.statuses[k]).length).map(k => { const l = activeStories(S.statuses[k]); const seen = (S.seen[k] || 0) >= l.at(-1).ts; return `<div class="row" data-act="viewStatus" data-num="${esc(k)}"><div class="st-ring ${seen ? 'seen' : ''}">${av(nameOf(k), 44)}</div><div class="grow"><b>${esc(nameOf(k))}</b><small>${hm(l.at(-1).ts)}</small></div></div>`; }).join('') || '<div class="empty"><i class="fas fa-circle-notch"></i>Nenhum status dos seus contatos</div>');
+  } else {
+    body = S.calls.slice(0, 30).map(c => `<div class="row" data-act="callNum" data-num="${esc(c.num)}">${av(nameOf(c.num))}<div class="grow"><b style="${c.missed ? 'color:#c62828' : ''}">${esc(nameOf(c.num))}</b><small><i class="fas ${c.out ? 'fa-arrow-up' : 'fa-arrow-down'}" style="color:${c.missed ? '#c62828' : '#25d366'}"></i> ${hm(c.ts)}${c.dur ? ' • ' + fmtDur(c.dur) : ''}</small></div><i class="fas fa-phone" style="color:#075e54"></i></div>`).join('') || '<div class="empty"><i class="fas fa-phone"></i>Sem chamadas</div>';
+  }
+  $('c-whatsapp').innerHTML = `<div class="tabs">${tab('chats', 'fa-comment', 'Conversas')}${tab('status', 'fa-circle-notch', 'Status')}${tab('calls', 'fa-phone', 'Ligações')}</div><div class="tab-body">${body}</div>`;
+  const fab = $('wa-fab'); fab.style.display = 'flex'; fab.innerHTML = `<i class="fas ${{ chats: 'fa-comment-medical', status: 'fa-pen', calls: 'fa-phone-volume' }[waTab]}"></i>`;
+  updateBadge();
+}
+function bubbles(num) {
+  return (S.chats[num] || []).map(m => `<div class="bubble ${m.out ? '' : 'in'}">${esc(m.text)}<small>${hm(m.ts)}${m.out ? ' ✓✓' : ''}</small></div>`).join('') || '<div style="margin:auto;font-size:12px;color:#6b6b6b;background:rgba(255,255,255,.7);padding:6px 12px;border-radius:10px">Diga olá 👋</div>';
+}
+function openChat(num) {
+  curChat = String(num); S.unread[curChat] = 0; save(); updateBadge();
+  openSub('whatsapp', `<div class="chat-top">${av(nameOf(num), 38)}<div class="grow"><b>${esc(nameOf(num))}</b><small>${esc(num)}</small></div><i class="fas fa-phone act" data-act="callNum" data-num="${esc(num)}"></i>${findContact(num) ? '' : `<i class="fas fa-user-plus act" data-act="saveFromChat" data-num="${esc(num)}"></i>`}</div>
+    <div class="wa-chat" id="wa-chat">${bubbles(num)}</div>
+    <div class="wa-input"><input type="text" id="wa-msg" class="input-field" placeholder="Mensagem" maxlength="200" autocomplete="off"><button class="wa-send" data-act="waSend" data-num="${esc(num)}"><i class="fas fa-paper-plane"></i></button></div>`, 'chat', () => { curChat = null; if (activeAppId === 'app-whatsapp') renderWA(); });
+  const c = $('wa-chat'); c.scrollTop = c.scrollHeight;
+}
+function pushMsg(num, text, out) {
+  num = String(num); (S.chats[num] = S.chats[num] || []).push({ text, out, ts: Date.now() }); save();
+  if (curChat === num && $('wa-chat')) { $('wa-chat').innerHTML = bubbles(num); $('wa-chat').scrollTop = 99999; }
+}
+function newChatList() {
+  openSub('whatsapp', `<h3 style="margin-bottom:10px">Nova conversa</h3><div style="display:flex;gap:6px"><input type="number" id="nc-num" class="input-field" placeholder="Número de celular do jogador" style="margin:0"><button class="btn-small" style="background:#25d366;color:#fff" data-act="ncGo"><i class="fas fa-arrow-right"></i></button></div>
+    <div class="row" style="margin-top:12px" data-act="addContact2"><div class="ic" style="background:#1565c0"><i class="fas fa-user-plus"></i></div><div class="grow"><b>Novo contato</b></div></div>
+    <div class="section-title">Contatos</div>${S.contacts.map(c => `<div class="row" data-act="chatWith" data-num="${esc(c.num)}">${av(c.name)}<div class="grow"><b>${esc(c.name)}</b><small>${esc(c.num)}</small></div></div>`).join('') || '<div class="empty"><i class="fas fa-address-book"></i>Sem contatos</div>'}`);
+}
+
+/* Stories */
+let storyTimer = null, story = null;
+function openStories(list, num, mine) {
+  story = { list, i: 0, num, mine }; openOverlay($('story-ov'), () => { clearTimeout(storyTimer); if (activeAppId === 'app-whatsapp') renderWA(); });
+  drawStory();
+}
+function drawStory() {
+  const s = story.list[story.i], ov = $('story-ov'); clearTimeout(storyTimer);
+  ov.style.background = s.bg;
+  ov.innerHTML = `<div class="story-bars">${story.list.map((_, i) => `<div class="${i < story.i ? 'done' : i === story.i ? 'run' : ''}"><i></i></div>`).join('')}</div>
+    <div class="story-head">${av(story.mine ? S.me.name : nameOf(story.num), 36)}<div style="flex:1"><b>${story.mine ? 'Meu status' : esc(nameOf(story.num))}</b><small>${hm(s.ts)}</small></div>${story.mine ? '<i class="fas fa-trash" data-act="delStory"></i>' : ''}<i class="fas fa-xmark" data-act="closeStory"></i></div>
+    <div class="story-text">${s.image ? `<img src="${s.image}" style="max-width:100%;max-height:72%;object-fit:contain;border-radius:12px">` : esc(s.text)}</div><div class="story-tap l" data-act="storyPrev"></div><div class="story-tap r" data-act="storyNext"></div>`;
+  if (!story.mine) { S.seen[story.num] = Math.max(S.seen[story.num] || 0, s.ts); save(); }
+  storyTimer = setTimeout(storyNext, 4500);
+}
+function storyNext() { if (!story) return; if (story.i < story.list.length - 1) { story.i++; drawStory(); } else closeTop(); }
+function addStatus() {
+ $('modal-card').innerHTML=`<h4><i class="fab fa-whatsapp" style="color:#25d366"></i> Criar status</h4>
+ <p>Escolha uma imagem da galeria ou escreva uma atualização.</p>
+ <textarea class="input-field" id="status-text" placeholder="Escreva seu status..." maxlength="140"></textarea>
+ <button class="m-btn" type="button" id="status-gallery"><i class="fas fa-images"></i> Escolher imagem</button>
+ <input id="status-file" type="file" accept="image/*" hidden><div id="status-preview"></div>
+ <div class="m-row"><button class="m-btn" data-act="mClose">Cancelar</button><button class="m-btn ok" id="status-publish"><i class="fas fa-paper-plane"></i> Publicar</button></div>`;
+ openOverlay($('modal-ov')); let imageData='';
+ $('status-gallery').onclick=()=>$('status-file').click();
+ $('status-file').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{imageData=r.result;$('status-preview').innerHTML=`<img class="media-preview" src="${imageData}" alt="Prévia">`;};r.readAsDataURL(f);};
+ $('status-publish').onclick=()=>{const text=$('status-text').value.trim();if(!text&&!imageData)return toast('Escreva um texto ou escolha uma imagem','err');S.myStatus.push({text,image:imageData,bg:'#202020',ts:Date.now()});save();emit('phone:postStatus',text,imageData||'#202020');closeTop();toast('Status publicado','ok');renderWA();};
+}
+
+/* ================= Ações (delegação de cliques) ================= */
+const A = {
+  unlock: unlockPhone, drawer: openDrawer, back: goBack, home: goHome,
+  recents: () => { if (isLocked) return; if (isDrawerOpen) closeDrawer(); else { closeCurrentApp(); openDrawer(); } },
+  openApp: (d) => openApp(d.app), mClose: () => closeTop(),
+  pickColor: (d, el) => { const p = el.parentElement; p.dataset.val = d.c; p.querySelectorAll('span').forEach(s => s.classList.toggle('sel', s === el)); },
+  /* CariocaPay */
+  bankEye: () => { S.hide = !S.hide; save(); renderBank(); },
+  bankPix: bankPixForm,
+  pixGo: () => {
+    const id = $('pix-id').value.trim(), val = parseFloat($('pix-val').value), msg = $('pix-msg').value.trim();
+    if (!id) return shake('pix-id'); if (!val || val <= 0) return shake('pix-val');
+    confirmBox('Confirmar Pix', `Enviar R$ ${money(val)} para o ID ${esc(id)}?`, 'Enviar', () => doPix(id, val, msg));
+  },
+  bankCharge: () => ask('Cobrar via Pix', [{ id: 'id', label: 'ID do jogador', type: 'number', req: 1, max: 6 }, { id: 'val', label: 'Valor (R$)', type: 'number', req: 1, max: 12 }, { id: 'why', label: 'Motivo', max: 40 }], 'Enviar cobrança', (v) => { if (offline()) return; emit('phone:chargePix', v.id, parseFloat(v.val), v.why); toast('Cobrança enviada para o ID ' + v.id, 'ok'); }),
+  bankStatement: () => openSub('bank', `<h3 style="margin-bottom:10px"><i class="fas fa-receipt" style="color:var(--red2)"></i> Extrato</h3>${S.txs.map(txRow).join('') || '<div class="empty"><i class="fas fa-receipt"></i>Sem movimentações</div>'}`),
+  bankCard: () => openSub('bank', bankCardView()),
+  payInvoice: () => { if (!S.fatura) return toast('Fatura zerada', ''); if (S.balance < S.fatura) return toast('Saldo insuficiente', 'err'); S.balance -= S.fatura; addTx('out', 'Fatura do cartão', S.fatura); S.fatura = 0; save(); toast('Fatura paga', 'ok'); $('sub-bank').innerHTML = bankCardView(); renderBank(); },
+  toggleCard: () => { S.cardBlocked = !S.cardBlocked; save(); $('sub-bank').innerHTML = bankCardView(); toast(S.cardBlocked ? 'Cartão bloqueado' : 'Cartão desbloqueado', 'ok'); },
+  bankSavings: () => openSub('bank', savingsView()),
+  saveIn: () => ask('Guardar no cofrinho', [{ id: 'v', label: 'Valor (R$)', type: 'number', req: 1, max: 12 }], 'Guardar', (v) => { const n = parseFloat(v.v); if (!(n > 0)) return; if (n > S.balance) return toast('Saldo insuficiente', 'err'); S.balance -= n; S.savings += n; addTx('out', 'Guardado no cofrinho', n); save(); $('sub-bank').innerHTML = savingsView(); renderBank(); toast('Valor guardado', 'ok'); }),
+  saveOut: () => ask('Resgatar do cofrinho', [{ id: 'v', label: 'Valor (R$)', type: 'number', req: 1, max: 12 }], 'Resgatar', (v) => { const n = parseFloat(v.v); if (!(n > 0)) return; if (n > S.savings) return toast('Valor maior que o guardado', 'err'); S.savings -= n; S.balance += n; addTx('in', 'Resgate do cofrinho', n); save(); $('sub-bank').innerHTML = savingsView(); renderBank(); toast('Valor resgatado', 'ok'); }),
+  bankKeys: () => openSub('bank', keysView()),
+  addKey: () => ask('Cadastrar chave', [{ id: 't', label: 'Tipo', type: 'select', options: [{ v: 'Telefone', t: 'Telefone' }, { v: 'Aleatória', t: 'Aleatória' }] }], 'Cadastrar', (v) => { const k = v.t === 'Telefone' ? S.me.num : Math.random().toString(36).slice(2, 10).toUpperCase(); S.keys.push({ k, t: 'Chave ' + v.t.toLowerCase(), ic: v.t === 'Telefone' ? 'fa-mobile-screen' : 'fa-shuffle' }); save(); $('sub-bank').innerHTML = keysView(); toast('Chave cadastrada', 'ok'); }),
+  delKey: (d) => { S.keys.splice(+d.i, 1); save(); $('sub-bank').innerHTML = keysView(); },
+  /* GPS */
+  gpsSet: (d) => { gpsDest = d.n; emit('phone:setGps', d.k); toast('Rota marcada: ' + d.n, 'ok'); renderGps(); },
+  gpsClear: () => { gpsDest = null; emit('phone:setGps', ''); toast('Rota removida'); renderGps(); },
+  gpsHere: () => { gpsDest = 'Minha posição'; emit('phone:setGps', '__current__'); toast('Posição marcada no mapa', 'ok'); renderGps(); },
+  /* Uber */
+  pickRide: (d) => { ride = d.r; document.querySelectorAll('.ride-opt').forEach(o => o.classList.toggle('selected', o.dataset.r === ride)); },
+  uberGo: () => { const dest = $('uber-dest').value.trim(); if (!dest) return shake('uber-dest'); if (offline()) return; startTrip(dest); },
+  tripEnd: () => window._trip?.finish(),
+  tripCancel: () => { emit('phone:cancelUber'); toast('Viagem cancelada'); closeTop(); },
+  /* Serviços */
+  callService: (d) => { if (offline()) return; ask('Chamar ' + d.t, [{ id: 'd', label: 'Descreva a situação (opcional)', type: 'area', max: 120, ph: 'Ex: acidente na Av. Principal' }], 'Chamar', (v) => { S.services.unshift({ t: d.t, d: v.d, ts: Date.now() }); S.services = S.services.slice(0, 20); save(); emit('phone:callService', d.t, v.d); toast(d.t + ' acionado!', 'ok'); renderServices(); }); },
+  /* Câmera / Galeria */
+  camFlash: () => { camFlash = !camFlash; renderCamera(); }, camFlip: () => { camSelfie = !camSelfie; renderCamera(); },
+  snap: () => {
+    const f = $('cam-flash'); if (camFlash) { f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+    const i = rnd(0, COLORS.length - 1); S.photos.unshift({ id: Date.now(), name: `IMG_${pad2(new Date().getDate())}${pad2(S.photos.length + 1)}`, c1: COLORS[i], c2: COLORS[(i + 3) % COLORS.length], ts: Date.now() });
+    save(); emit('phone:takePhoto'); toast('Foto salva na galeria');
+  },
+  viewPhoto: (d) => { const p = S.photos.find(x => x.id == d.id); if (!p) return; openSub('gallery', `<div style="height:320px;border-radius:16px;background:linear-gradient(135deg,${p.c1},${p.c2});display:flex;align-items:flex-end;padding:14px;color:#fff;font-weight:700">${esc(p.name)}</div><div style="font-size:12px;color:#777;margin:10px 0">${new Date(p.ts).toLocaleString('pt-BR')}</div><button class="btn-action" style="background:#c62828" data-act="delPhoto" data-id="${p.id}"><i class="fas fa-trash"></i> Excluir foto</button>`); },
+  delPhoto: (d) => { S.photos = S.photos.filter(x => x.id != d.id); save(); closeTop(); renderGallery(); toast('Foto excluída'); },
+  /* Música */
+  musToggle: () => musicSet(station, !playing), musNext: () => musicSet(station + 1, true), musPrev: () => musicSet(station - 1, true), musPick: (d) => musicSet(+d.i, true),
+  /* OLX */
+  olxTab: (d) => { olxTab = d.t; renderOlx(); },
+  olxNew: () => ask('Novo anúncio', [{ id: 't', label: 'Título', req: 1, max: 30 }, { id: 'p', label: 'Preço (R$)', type: 'number', req: 1, max: 12 }, { id: 'd', label: 'Descrição', type: 'area', max: 80 }], 'Anunciar', (v) => { const p = parseFloat(v.p); if (!(p > 0)) return toast('Preço inválido', 'err'); S.ads.unshift({ id: Date.now(), title: v.t, price: p, desc: v.d || 'Sem descrição', seller: S.me.name, mine: true }); save(); emit('phone:sellOlx', v.t, p); toast('Anúncio publicado', 'ok'); renderOlx(); }),
+  olxDel: (d) => { S.ads = S.ads.filter(a => a.id != d.id); save(); renderOlx(); },
+  olxBuy: (d) => { const a = S.ads.find(x => x.id == d.id); if (!a || offline()) return; confirmBox('Comprar ' + esc(a.title), `Pagar R$ ${money(a.price)} com CariocaPay?`, 'Comprar', () => { if (S.balance < a.price) return toast('Saldo insuficiente', 'err'); S.balance -= a.price; addTx('out', 'OLX • ' + a.title, a.price); save(); emit('phone:buyOlx', a.title, a.price); toast('Compra realizada!', 'ok'); renderOlx(); }); },
+  /* Navegador */
+  webGo: () => { const q = $('url-input').value.trim(); if (!q) return shake('url-input'); A.webQ({ q }); },
+  webQ: (d) => { const q = d.q; const s = SITES.find(x => x.u.includes(q.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '')) || x_n(x, q)); s ? webPage(s.n, s.u, s.d) : webPage('Resultados para "' + q + '"', q, 'Nenhum resultado oficial encontrado no servidor. Tente pesquisar por Carioca Roleplay, Discord, Fórum ou Loja VIP.'); },
+  webOpen: (d) => { const s = SITES[+d.i]; webPage(s.n, s.u, s.d); },
+  /* Ajustes */
+  editProfile: () => ask('Meu perfil', [{ id: 'n', label: 'Nome', val: S.me.name, req: 1, max: 24 }, { id: 'num', label: 'Meu número', type: 'number', val: S.me.num, req: 1, max: 10 }], 'Salvar', (v) => { S.me.name = v.n; S.me.num = v.num; save(); renderSettings(); emit('phone:setProfile', v.n, v.num); toast('Perfil atualizado', 'ok'); }),
+  resetPhone: () => confirmBox('Restaurar celular', 'Todos os dados (contatos, mensagens, fotos) serão apagados.', 'Restaurar', () => { try { localStorage.removeItem(KEY); } catch (e) {} S = DEF(); save(); closeCurrentApp(); applySettings(); updateBadge(); toast('Celular restaurado', 'ok'); }),
+  /* Telefone & contatos */
+  phoneTab: (d) => { phoneTab = d.t; renderPhone(); },
+  key: (d) => { if (dialNum.length < 12) { dialNum += d.k; updateDial(); } }, delKeyDial: () => { dialNum = dialNum.slice(0, -1); updateDial(); },
+  dialCall: () => startCall(dialNum), callNum: (d) => startCall(d.num),
+  saveDial: () => { if (!dialNum) return toast('Digite um número', 'err'); addContact('', dialNum); },
+  addContact: () => addContact(), addContact2: () => addContact('', '', () => { closeTop(); newChatList(); }),
+  contactView: (d) => contactView(d.num),
+  editContact: (d) => { const c = findContact(d.num); addContact(c.name, c.num, () => { closeTop(); renderPhone(); }); },
+  delContact: (d) => confirmBox('Excluir contato', `Remover ${esc(nameOf(d.num))}?`, 'Excluir', () => { S.contacts = S.contacts.filter(c => c.num !== d.num); save(); closeTop(); renderPhone(); toast('Contato excluído'); }),
+  chatWith: (d) => { closeTop(); if (activeAppId !== 'app-whatsapp') openApp('app-whatsapp'); openChat(d.num); },
+  /* Chamadas */
+  callEnd: () => endCall(), callMute: () => { call.mute = !call.mute; renderCall(); }, callSpk: () => { call.spk = !call.spk; renderCall(); },
+  callAccept: () => { call.state = 'on'; call.t0 = Date.now(); clearInterval(call.timer); call.timer = setInterval(renderCall, 1000); emit('phone:answer', call.num); renderCall(); },
+  callDecline: () => { emit('phone:decline', call.num); endCall(false, true); toast('Chamada recusada'); },
+  /* WhatsApp */
+  waTab: (d) => { waTab = d.t; renderWA(); },
+  waFab: () => { if (waTab === 'chats') newChatList(); else if (waTab === 'status') addStatus(); else { ask('Ligar para', [{ id: 'n', label: 'Número', type: 'number', req: 1, max: 12 }], 'Ligar', (v) => startCall(v.n)); } },
+  openChat: (d) => openChat(d.num),
+  waSend: (d) => {
+    const inp = $('wa-msg'), t = inp.value.trim(); if (!t) return shake('wa-msg'); if (offline()) return;
+    pushMsg(d.num, t, true); emit('phone:sendWhatsapp', d.num, t); inp.value = ''; inp.focus();
+  },
+  ncGo: () => { const n = $('nc-num').value.replace(/\D/g, ''); if (!n || n.length < 6) return shake('nc-num'); closeTop(); openChat(n); },
+  saveFromChat: (d) => addContact('', d.num, () => { closeTop(); openChat(d.num); }),
+  addStatus: () => addStatus(), viewMyStatus: () => openStories(activeStories(S.myStatus), null, true),
+  viewStatus: (d) => openStories(activeStories(S.statuses[d.num]), d.num, false),
+  closeStory: () => closeTop(), storyNext: storyNext, storyPrev: () => { if (story.i > 0) story.i--; drawStory(); },
+  delStory: () => { const s = story.list[story.i]; S.myStatus = S.myStatus.filter(x => x !== s); save(); closeTop(); toast('Status excluído'); }
+};
+function x_n(x, q) { return x.n.toLowerCase().includes(q.toLowerCase()); }
+$('touch-area').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const f = A[el.dataset.act]; if (f) { try { f(el.dataset, el); } catch (err) { console.error(err); } }
+});
+$('touch-area').addEventListener('change', (e) => {
+  const k = e.target.dataset.set; if (!k) return;
+  S.set[k] = e.target.checked; save(); applySettings();
+  if (k === 'plane') toast(S.set.plane ? 'Modo avião ativado' : 'Modo avião desativado', 'ok'); else if(k==='darkMode') toast(S.set.darkMode?'Modo escuro ativado':'Modo escuro desativado','ok');
+});
+$('touch-area').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const id = e.target.id; const m = { 'wa-msg': () => document.querySelector('[data-act="waSend"]')?.click(), 'url-input': () => A.webGo(), 'uber-dest': () => A.uberGo(), 'nc-num': () => A.ncGo() }[id]; if (m) m();
+});
+
+/* ================= API para o servidor/Lua ================= */
+window.phoneAPI = {
+  setBalance,
+  setProfile(name, id, num) { if (name) S.me.name = name; if (id) S.me.id = String(id); if (num) S.me.num = String(num); save(); },
+  receiveMessage(from, text) { from = String(from); pushMsg(from, text, false); if (curChat !== from) { S.unread[from] = (S.unread[from] || 0) + 1; save(); toast(nameOf(from) + ': ' + text.slice(0, 40)); } updateBadge(); if (activeAppId === 'app-whatsapp' && !subOpen('whatsapp')) renderWA(); },
+  receiveStatus(from, text, bg) { from = String(from); (S.statuses[from] = S.statuses[from] || []).push({ text, bg: bg || STORY_COLORS[0], ts: Date.now() }); save(); toast(nameOf(from) + ' postou um status'); if (activeAppId === 'app-whatsapp' && !subOpen('whatsapp')) renderWA(); },
+  receivePix(from, val) { val = Number(val); S.balance += val; addTx('in', `Pix de ID ${from}`, val); save(); toast(`Você recebeu R$ ${money(val)} de ${from}`, 'ok'); if (activeAppId === 'app-bank') renderBank(); },
+  cardPurchase(val, desc) { S.fatura += Number(val); save(); toast(`Compra no cartão: R$ ${money(val)}`); },
+  incomingCall(num) { if (S.set.plane || call) return; call = { num: String(num), state: 'in', dir: 'in' }; $('call-ov').classList.add('show'); renderCall(); },
+  callAnswered, callEnded() { endCall(false); },
+  notify: toast
+};
+
+applySettings(); updateBadge();
+</script>
 </body>
 </html>
