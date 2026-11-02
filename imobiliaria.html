@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Imobiliária - Conexão Roleplay</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    html, body {
+      background: transparent !important;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100vw;
+      height: 100vh;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    /* Window Principal Responsiva */
+    .realestate-window {
+      width: 92vw;
+      max-width: 1100px;
+      height: 88vh;
+      max-height: 680px;
+      background: rgba(10, 10, 12, 0.92);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 204, 0, 0.2);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 204, 0, 0.03);
+      padding: clamp(12px, 2vh, 25px) clamp(15px, 2vw, 30px);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Topo Header */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: clamp(10px, 1.5vh, 20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: clamp(8px, 1vh, 15px);
+      gap: 10px;
+    }
+
+    .title-box h1 {
+      font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+      font-weight: 800;
+      color: #ffcc00;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .title-box span {
+      font-size: clamp(0.55rem, 1vw, 0.65rem);
+      color: #777;
+      letter-spacing: 2px;
+      font-weight: 600;
+    }
+
+    /* Navegação por Abas */
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #888;
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.65rem, 1vw, 0.75rem);
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: #ffcc00;
+      color: #000;
+      box-shadow: 0 0 12px rgba(255, 204, 0, 0.3);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .player-stats {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: clamp(0.65rem, 1vw, 0.75rem);
+      font-weight: 700;
+      color: #ccc;
+    }
+
+    .player-stats .yellow {
+      color: #ffcc00;
+    }
+
+    /* Botão de Fechar Interface */
+    .close-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #aaa;
+      width: clamp(28px, 3vw, 36px);
+      height: clamp(28px, 3vw, 36px);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: clamp(0.9rem, 1.2vw, 1.1rem);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+      background: rgba(231, 76, 60, 0.8);
+      color: #fff;
+      border-color: #e74c3c;
+      box-shadow: 0 0 12px rgba(231, 76, 60, 0.5);
+    }
+
+    /* Layout do Conteúdo Principal Adaptável */
+    .main-content {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) 1.2fr;
+      gap: clamp(10px, 2vw, 25px);
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Coluna Esquerda: Lista de Cards com Scroll */
+    .properties-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      padding-right: 6px;
+      min-height: 0;
+    }
+
+    .properties-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .properties-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 204, 0, 0.4);
+      border-radius: 4px;
+    }
+
+    .property-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .property-card:hover, .property-card.selected {
+      border-color: #ffcc00;
+      background: rgba(255, 204, 0, 0.03);
+      box-shadow: 0 0 15px rgba(255, 204, 0, 0.05);
+    }
+
+    .card-thumb {
+      width: clamp(65px, 8vw, 90px);
+      height: clamp(65px, 8vw, 90px);
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid rgba(255, 204, 0, 0.2);
+    }
+
+    .card-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .card-title {
+      font-size: clamp(0.75rem, 1vw, 0.85rem);
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .card-tag {
+      font-size: 0.55rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .tag-buy { background: rgba(255, 204, 0, 0.2); color: #ffcc00; border: 1px solid rgba(255, 204, 0, 0.4); }
+    .tag-rent { background: rgba(0, 168, 255, 0.2); color: #00a8ff; border: 1px solid rgba(0, 168, 255, 0.4); }
+    .tag-owner { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); }
+
+    .card-location {
+      font-size: 0.65rem;
+      color: #777;
+    }
+
+    .card-details {
+      display: flex;
+      gap: 10px;
+      font-size: 0.6rem;
+      color: #aaa;
+    }
+
+    .card-price {
+      font-size: clamp(0.75rem, 1vw, 0.9rem);
+      font-weight: 800;
+      color: #ffcc00;
+    }
+
+    /* Coluna Direita: Detalhes do Imóvel + Mapa */
+    .details-column {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 100%;
+      min-height: 0;
+    }
+
+    /* Container do Mapa */
+    .map-container {
+      flex: 1;
+      min-height: 120px;
+      background: #111 url('https://upload.wikimedia.org/wikipedia/commons/2/23/GTA_SA_map.PNG') center/cover;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-pin {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: #ffcc00;
+      border: 2px solid #000;
+      border-radius: 50%;
+      box-shadow: 0 0 12px #ffcc00;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      transition: all 0.3s ease;
+    }
+
+    .preview-box {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 204, 0, 0.2);
+      border-radius: 8px;
+      padding: clamp(8px, 1.2vh, 15px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .spec-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .spec-label {
+      font-size: 0.5rem;
+      color: #777;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .spec-value {
+      font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .spec-value.yellow { color: #ffcc00; }
+    .spec-value.danger { color: #e74c3c; }
+
+    /* Botões de Ação */
+    .action-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: clamp(8px, 1.2vh, 12px);
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+      font-weight: 800;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ccc;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .btn-primary {
+      background: #ffcc00;
+      color: #000;
+      box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 0 25px rgba(255, 204, 0, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+      border: 1px solid rgba(231, 76, 60, 0.4);
+    }
+
+    .btn-danger:hover {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    @media (max-height: 500px) {
+      .realestate-window {
+        width: 96vw;
+        height: 94vh;
+        padding: 10px 15px;
+      }
+      .header-bar {
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+      }
+      .spec-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="realestate-window" id="app-window">
+    
+    <!-- Topo Header -->
+    <div class="header-bar">
+      <div class="title-box">
+        <h1>IMOBILIÁRIA</h1>
+        <span>CONEXÃO ROLEPLAY</span>
+      </div>
+
+      <div class="nav-tabs">
+        <button class="tab-btn active" id="tab-catalog">Catálogo</button>
+        <button class="tab-btn" id="tab-my-properties">Minhas Propriedades</button>
+      </div>
+
+      <div class="header-right">
+        <div class="player-stats">
+          <span><strong class="yellow">R$</strong> 9.999.999</span>
+          <span>💳 9.999.999</span>
+        </div>
+        
+        <button class="close-btn" id="close-btn" onclick="closeUI()" title="Fechar">✕</button>
+      </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+      
+      <!-- Lista de Imóveis (Esquerda) -->
+      <div class="properties-list" id="properties-container">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+
+      <!-- Mapa e Ficha Técnica (Direita) -->
+      <div class="details-column">
+        
+        <div class="map-container">
+          <div class="map-pin" id="map-pin" style="top: 70%; left: 55%;" title="Imóvel"></div>
+        </div>
+
+        <div class="preview-box">
+          <div class="spec-grid" id="spec-grid">
+            <!-- Especificações carregadas via JS -->
+          </div>
+
+          <div class="action-row" id="action-buttons">
+            <!-- Botões alternam via JS conforme a aba -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    function closeUI() {
+      document.getElementById('app-window').style.display = 'none';
+      if (window.Android && typeof window.Android.close === 'function') {
+        window.Android.close();
+        return;
+      }
+      if (typeof window.__sampCloseLocalUi === 'function') {
+        window.__sampCloseLocalUi();
+      }
+    }
+
+    window.addEventListener('keyup', function(event) {
+      if (event.key === "Escape") {
+        closeUI();
+      }
+    });
+
+    // ==========================================
+    // LISTA DE CASAS DO CATÁLIGO (ADICIONE MAIS AQUI)
+    // ==========================================
+    const catalogData = [
+      { 
+        id: 1, 
+        name: "Mansão Richman #102", 
+        type: "buy", 
+        typeText: "À Venda", 
+        price: "R$ 2.500.000", 
+        iptu: "R$ 2.500", 
+        location: "Richman, Los Santos", 
+        slots: "4 Vagas", 
+        trunk: "250kg", 
+        pin: { top: "35%", left: "42%" }, 
+        img: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=200" 
+      },
+      { 
+        id: 2, 
+        name: "Apartamento Vinewood", 
+        type: "rent", 
+        typeText: "Aluguel", 
+        price: "R$ 15.000 / dia", 
+        iptu: "R$ 500", 
+        location: "Vinewood Hills, Los Santos", 
+        slots: "2 Vagas", 
+        trunk: "100kg", 
+        pin: { top: "30%", left: "50%" }, 
+        img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=200" 
+      },
+      { 
+        id: 3, 
+        name: "Casa de Praia #45", 
+        type: "buy", 
+        typeText: "À Venda", 
+        price: "R$ 850.000", 
+        iptu: "R$ 850", 
+        location: "Santa Maria Beach, Los Santos", 
+        slots: "1 Vaga", 
+        trunk: "80kg", 
+        pin: { top: "78%", left: "38%" }, 
+        img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=200" 
+      },
+      { 
+        id: 4, 
+        name: "Vila Idlewood #08", 
+        type: "buy", 
+        typeText: "À Venda", 
+        price: "R$ 320.000", 
+        iptu: "R$ 320", 
+        location: "Idlewood, Los Santos", 
+        slots: "1 Vaga", 
+        trunk: "60kg", 
+        pin: { top: "68%", left: "58%" }, 
+        img: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=200" 
+      },
+      { 
+        id: 5, 
+        name: "Penthouse Rodeo #01", 
+        type: "buy", 
+        typeText: "À Venda", 
+        price: "R$ 4.200.000", 
+        iptu: "R$ 4.200", 
+        location: "Rodeo, Los Santos", 
+        slots: "5 Vagas", 
+        trunk: "350kg", 
+        pin: { top: "52%", left: "40%" }, 
+        img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=200" 
+      },
+      { 
+        id: 6, 
+        name: "Casa de Campo Palomino", 
+        type: "rent", 
+        typeText: "Aluguel", 
+        price: "R$ 8.000 / dia", 
+        iptu: "R$ 300", 
+        location: "Palomino Creek", 
+        slots: "2 Vagas", 
+        trunk: "120kg", 
+        pin: { top: "25%", left: "75%" }, 
+        img: "https://images.unsplash.com/photo-1510798831971-661eb04b3739?q=80&w=200" 
+      },
+      { 
+        id: 7, 
+        name: "Sobrado Temple #14", 
+        type: "buy", 
+        typeText: "À Venda", 
+        price: "R$ 650.000", 
+        iptu: "R$ 650", 
+        location: "Temple, Los Santos", 
+        slots: "2 Vagas", 
+        trunk: "100kg", 
+        pin: { top: "45%", left: "52%" }, 
+        img: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?q=80&w=200" 
+      },
+      { 
+        id: 8, 
+        name: "Cabana Tierra Robada", 
+        type: "buy", 
+        typeText: "À Venda", 
+        price: "R$ 180.000", 
+        iptu: "R$ 180", 
+        location: "Tierra Robada", 
+        slots: "1 Vaga", 
+        trunk: "50kg", 
+        pin: { top: "15%", left: "20%" }, 
+        img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=200" 
+      }
+    ];
+
+    const myPropertiesData = [
+      { id: 101, name: "Casa Muldraugh #12", type: "owner", typeText: "Sua Propriedade", value: "R$ 1.200.000", iptuStatus: "Pendente (R$ 1.200)", location: "Mulholland, Los Santos", slots: "2 Vagas", trunk: "150kg", pin: { top: "32%", left: "48%" }, img: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=200" }
+    ];
+
+    let currentTab = 'catalog';
+
+    const propertiesContainer = document.getElementById('properties-container');
+    const specGrid = document.getElementById('spec-grid');
+    const actionButtons = document.getElementById('action-buttons');
+    const mapPin = document.getElementById('map-pin');
+
+    function renderView(tab) {
+      currentTab = tab;
+      propertiesContainer.innerHTML = '';
+      const list = tab === 'catalog' ? catalogData : myPropertiesData;
+
+      if(list.length === 0) {
+        propertiesContainer.innerHTML = `<p style="color:#777; font-size:0.8rem; text-align:center; margin-top:20px;">Você não possui propriedades registradas.</p>`;
+        return;
+      }
+
+      list.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = `property-card ${index === 0 ? 'selected' : ''}`;
+        
+        let tagClass = 'tag-buy';
+        if(item.type === 'rent') tagClass = 'tag-rent';
+        if(item.type === 'owner') tagClass = 'tag-owner';
+
+        card.innerHTML = `
+          <img src="${item.img}" class="card-thumb" alt="Casa">
+          <div class="card-info">
+            <div class="card-header">
+              <span class="card-title">${item.name}</span>
+              <span class="card-tag ${tagClass}">${item.typeText}</span>
+            </div>
+            <span class="card-location">📍 ${item.location}</span>
+            <div class="card-details">
+              <span>🚗 ${item.slots}</span>
+              <span>📦 Baú ${item.trunk}</span>
+            </div>
+            <span class="card-price">${item.price || item.value}</span>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          document.querySelectorAll('.property-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          updateDetails(item);
+        });
+
+        propertiesContainer.appendChild(card);
+      });
+
+      updateDetails(list[0]);
+    }
+
+    function updateDetails(item) {
+      mapPin.style.top = item.pin.top;
+      mapPin.style.left = item.pin.left;
+
+      if(currentTab === 'catalog') {
+        specGrid.innerHTML = `
+          <div class="spec-item"><span class="spec-label">Preço da Compra</span><span class="spec-value yellow">${item.price}</span></div>
+          <div class="spec-item"><span class="spec-label">IPTU Diário</span><span class="spec-value">${item.iptu}</span></div>
+          <div class="spec-item"><span class="spec-label">Vagas Garagem</span><span class="spec-value">${item.slots}</span></div>
+          <div class="spec-item"><span class="spec-label">Capacidade Baú</span><span class="spec-value">${item.trunk}</span></div>
+        `;
+        actionButtons.innerHTML = `
+          <button class="btn btn-secondary">📍 Marcar no GPS</button>
+          <button class="btn btn-primary">Comprar Imóvel</button>
+        `;
+      } else {
+        specGrid.innerHTML = `
+          <div class="spec-item"><span class="spec-label">Valor do Imóvel</span><span class="spec-value yellow">${item.value}</span></div>
+          <div class="spec-item"><span class="spec-label">Situação IPTU</span><span class="spec-value danger">${item.iptuStatus}</span></div>
+          <div class="spec-item"><span class="spec-label">Vagas Garagem</span><span class="spec-value">${item.slots}</span></div>
+          <div class="spec-item"><span class="spec-label">Capacidade Baú</span><span class="spec-value">${item.trunk}</span></div>
+        `;
+        actionButtons.innerHTML = `
+          <button class="btn btn-secondary">🔒 Trancar / Destrancar</button>
+          <button class="btn btn-secondary">💵 Pagar IPTU</button>
+          <button class="btn btn-danger">Vender Imóvel</button>
+        `;
+      }
+    }
+
+    document.getElementById('tab-catalog').addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      renderView('catalog');
+    });
+
+    document.getElementById('tab-my-properties').addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      renderView('my-properties');
+    });
+
+    renderView('catalog');
+  </script>
+</body>
+</html>

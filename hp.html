@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Produção de Medicamentos - Prensa e Blister</title>
+  <style>
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      user-select: none; 
+      -webkit-user-select: none; 
+    }
+    
+    /* Garantia de ocupação total de tela sem transbordo de pixels/scroll */
+    html, body { 
+      width: 100%; 
+      height: 100%; 
+      margin: 0; 
+      padding: 0; 
+      overflow: hidden; 
+      background-color: #070c12; 
+      font-family: 'Segoe UI', sans-serif; 
+      color: #fff; 
+      touch-action: none; 
+    }
+
+    #canvas-container { 
+      width: 100%; 
+      height: 100%; 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      z-index: 1; 
+    }
+    
+    #start-screen {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(7, 12, 18, 0.82), rgba(7, 12, 18, 0.95)), 
+                  url('https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;
+      z-index: 100; display: flex; justify-content: center; align-items: center;
+      backdrop-filter: blur(6px); transition: opacity 0.5s ease, visibility 0.5s;
+    }
+    .start-card {
+      background: rgba(13, 22, 33, 0.95); border: 1px solid rgba(0, 180, 216, 0.4);
+      padding: 40px 30px; border-radius: 16px; text-align: center; max-width: 440px; width: 90%;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 180, 216, 0.2);
+      display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(12px);
+    }
+    .start-card h1 { font-size: 1.3rem; color: #00b4d8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+    .start-card p { font-size: 0.85rem; color: #94a3b8; margin-bottom: 24px; line-height: 1.4; }
+    
+    #btn-start-game {
+      width: 100%; padding: 14px; background: #00b4d8; border: none; border-radius: 8px;
+      color: #000; font-weight: bold; font-size: 0.95rem; cursor: pointer;
+      transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
+      box-shadow: 0 0 15px rgba(0, 180, 216, 0.3);
+    }
+    #btn-start-game:hover { background: #48cae4; box-shadow: 0 0 25px rgba(0, 180, 216, 0.6); transform: translateY(-2px); }
+
+    #ui-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+      pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 20px;
+      opacity: 0; transition: opacity 0.5s ease;
+    }
+    .header { background: rgba(13, 22, 33, 0.88); border: 1px solid rgba(0, 180, 216, 0.3); padding: 12px 20px; border-radius: 8px; width: max-content; backdrop-filter: blur(10px); }
+    .header h1 { font-size: 1.1rem; color: #00b4d8; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+    .header p { font-size: 0.75rem; color: #64748b; }
+
+    .footer-panel {
+      background: rgba(13, 22, 33, 0.92); border: 1px solid rgba(255,255,255,0.1); padding: 18px 24px; border-radius: 12px;
+      width: 100%; max-width: 460px; align-self: center; pointer-events: auto; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+    }
+    #step-indicator { font-size: 0.7rem; color: #00b4d8; letter-spacing: 1.5px; font-weight: bold; margin-bottom: 6px; }
+    #instruction-text { font-size: 0.95rem; color: #e2e8f0; font-weight: 500; margin-bottom: 12px; }
+    .progress-bar { width: 100%; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.05); }
+    #progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #00b4d8, #52b788); transition: width 0.15s ease-out; }
+    
+    #btn-action {
+      width: 100%; padding: 12px; background: #00b4d8; border: none; border-radius: 6px;
+      color: #000; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    #btn-action:disabled { background: #1e293b; color: #475569; cursor: not-allowed; }
+    #btn-action:hover:not(:disabled) { background: #48cae4; box-shadow: 0 0 15px rgba(0, 180, 216, 0.4); }
+
+    /* MODAL DE FINALIZAÇÃO */
+    #finish-modal {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(7, 12, 18, 0.88); z-index: 200; display: flex; justify-content: center; align-items: center;
+      backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+    }
+    #finish-modal.active { opacity: 1; pointer-events: auto; }
+    .finish-card {
+      background: rgba(13, 22, 33, 0.96); border: 1px solid rgba(0, 180, 216, 0.6);
+      padding: 35px 30px; border-radius: 16px; text-align: center; max-width: 400px; width: 90%;
+      box-shadow: 0 0 50px rgba(0, 180, 216, 0.25); display: flex; flex-direction: column; align-items: center;
+      transform: scale(0.9); transition: transform 0.4s ease;
+    }
+    #finish-modal.active .finish-card { transform: scale(1); }
+    .finish-icon { font-size: 3rem; margin-bottom: 10px; }
+    .finish-card h2 { font-size: 1.3rem; color: #00b4d8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+    .finish-card p { font-size: 0.85rem; color: #cbd5e1; margin-bottom: 24px; line-height: 1.4; }
+    #btn-close-modal {
+      width: 100%; padding: 12px; background: #00b4d8; border: none; border-radius: 8px;
+      color: #000; font-weight: bold; font-size: 0.9rem; cursor: pointer; text-transform: uppercase;
+      transition: all 0.2s ease;
+    }
+    #btn-close-modal:hover { background: #48cae4; box-shadow: 0 0 15px rgba(0, 180, 216, 0.5); }
+
+    #fade-screen { position: absolute; top:0; left:0; width:100%; height:100%; background:#070c12; z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+  <div id="start-screen">
+    <div class="start-card">
+      <h1>Linha de Comprimidos</h1>
+      <p>Misture o granulado, comprima as pílulas na prensa hidráulica e sele as cartelas blister para o estoque do hospital.</p>
+      <button id="btn-start-game" onclick="iniciarMinigame()">Iniciar Produção</button>
+    </div>
+  </div>
+
+  <div id="finish-modal">
+    <div class="finish-card">
+      <div class="finish-icon">💊</div>
+      <h2>Lote Selado!</h2>
+      <p>As cartelas de medicação foram totalmente processadas e seladas no blister. Caixa enviada à Farmácia Hospitalar.</p>
+      <button id="btn-close-modal" onclick="fecharModal()">Guardar Estoque</button>
+    </div>
+  </div>
+
+  <div id="fade-screen"></div>
+  <div id="canvas-container"></div>
+
+  <div id="ui-overlay">
+    <div class="header">
+      <h1>Farmácia Hospitalar</h1>
+      <p>Prensa e Embalagem Blister</p>
+    </div>
+
+    <div class="footer-panel">
+      <div id="step-indicator">ETAPA 1 DE 3: MISTURADOR GRANULADOR</div>
+      <div id="instruction-text">🧪 Arraste o Pote de Composto até o Misturador Industrial!</div>
+      <div class="progress-bar"><div id="progress-fill"></div></div>
+      <button id="btn-action" onclick="coletarProduto()" disabled>Coletar Remédios</button>
+    </div>
+  </div>
+
+  <script>
+    let minigameIniciado = false;
+
+    function iniciarMinigame() {
+      const startScreen = document.getElementById('start-screen');
+      const uiOverlay = document.getElementById('ui-overlay');
+      
+      startScreen.style.opacity = '0';
+      setTimeout(() => {
+        startScreen.style.visibility = 'hidden';
+        uiOverlay.style.opacity = '1';
+        minigameIniciado = true;
+      }, 500);
+    }
+
+    const container = document.getElementById('canvas-container');
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x09111e);
+
+    const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 1.9, 3.4);
+    camera.lookAt(0, 0.15, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    container.appendChild(renderer.domElement);
+
+    // ILUMINAÇÃO
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+    scene.add(ambientLight);
+    
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    mainLight.position.set(2, 6, 3);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
+
+    const softFill = new THREE.DirectionalLight(0x00b4d8, 0.5);
+    softFill.position.set(-3, 3, -2);
+    scene.add(softFill);
+
+    // BANCADA INDUSTRIAL
+    const mesaGroup = new THREE.Group();
+    const tampoMesa = new THREE.Mesh(
+      new THREE.BoxGeometry(4, 0.08, 2),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3, metalness: 0.5 })
+    );
+    tampoMesa.position.y = -0.04;
+    tampoMesa.receiveShadow = true;
+    mesaGroup.add(tampoMesa);
+    scene.add(mesaGroup);
+
+    // MATERIAIS
+    const matInox = new THREE.MeshStandardMaterial({ color: 0xcfd8dc, metalness: 0.85, roughness: 0.2 });
+    const matInoxEscuro = new THREE.MeshStandardMaterial({ color: 0x455a64, metalness: 0.8, roughness: 0.3 });
+    const matVidro = new THREE.MeshPhysicalMaterial({ color: 0xe0f7fa, roughness: 0.1, transmission: 0.9, transparent: true, opacity: 0.5 });
+    const matPoMassa = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9 });
+    const matPillAzul = new THREE.MeshStandardMaterial({ color: 0x00b4d8, roughness: 0.3, metalness: 0.1 });
+    const matAluminioBlister = new THREE.MeshStandardMaterial({ color: 0xb0bec5, metalness: 0.95, roughness: 0.1 });
+    const matPlasticoBolha = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.1, transmission: 0.85, transparent: true, opacity: 0.6 });
+
+    // === MÁQUINAS ESPECÍFICAS ===
+
+    // ETAPA 1: MISTURADOR INDUSTRIAL DE PÓ (Tambor Rotativo)
+    let tamborRotativoMesh = null;
+    function criarMisturadorGranulador() {
+      const grupo = new THREE.Group();
+
+      const baseMisturador = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 0.7), matInoxEscuro);
+      baseMisturador.position.y = 0.05;
+
+      const colunaEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 16), matInox);
+      colunaEsq.position.set(-0.25, 0.3, 0);
+
+      const colunaDir = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 16), matInox);
+      colunaDir.position.set(0.25, 0.3, 0);
+
+      // Tambor Central Transparente
+      const tamborGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.35, 32);
+      tamborGeo.rotateZ(Math.PI / 2);
+      tamborRotativoMesh = new THREE.Mesh(tamborGeo, matVidro);
+      tamborRotativoMesh.position.set(0, 0.3, 0);
+
+      // Conteúdo do Pó no Tambor
+      const poInternoGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.32, 16);
+      poInternoGeo.rotateZ(Math.PI / 2);
+      const poInterno = new THREE.Mesh(poInternoGeo, matPoMassa);
+      poInterno.visible = false;
+      tamborRotativoMesh.add(poInterno);
+
+      grupo.add(baseMisturador, colunaEsq, colunaDir, tamborRotativoMesh);
+      grupo.userData = { poInterno: poInterno };
+      return grupo;
+    }
+
+    // Pote de Princípio Ativo (Draggable 1)
+    function criarPotePo() {
+      const grupo = new THREE.Group();
+      const pote = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.28, 24), matInox);
+      const tampa = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.05, 24), matInoxEscuro);
+      tampa.position.y = 0.15;
+      grupo.add(pote, tampa);
+      grupo.position.y = 0.14;
+      return grupo;
+    }
+
+    // ETAPA 2: PRENSA HIDRÁULICA DE COMPRIMIDOS
+    let pistaoPrensaMesh = null;
+    function criarPrensaHidraulica() {
+      const grupo = new THREE.Group();
+
+      const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.6), matInoxEscuro);
+      base.position.y = 0.04;
+
+      const colunaA = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.7, 16), matInox);
+      colunaA.position.set(-0.3, 0.39, -0.2);
+
+      const colunaB = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.7, 16), matInox);
+      colunaB.position.set(0.3, 0.39, -0.2);
+
+      const topoPrensa = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.12, 0.5), matInoxEscuro);
+      topoPrensa.position.set(0, 0.7, -0.1);
+
+      // Pistão Móvel
+      pistaoPrensaMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3, 32), matInox);
+      pistaoPrensaMesh.position.set(0, 0.52, -0.1);
+
+      // Molde Base na prensa
+      const moldeBase = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.04, 0.3), matInox);
+      moldeBase.position.set(0, 0.1, -0.1);
+
+      grupo.add(base, colunaA, colunaB, topoPrensa, pistaoPrensaMesh, moldeBase);
+      return grupo;
+    }
+
+    // Bandeja de Massa Pressionada (Draggable 2)
+    function criarBandejaMassa() {
+      const grupo = new THREE.Group();
+      const prato = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.26), matInox);
+      const massa = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.025, 0.22), matPoMassa);
+      massa.position.y = 0.015;
+
+      grupo.add(prato, massa);
+      grupo.userData = { massaMesh: massa };
+      return grupo;
+    }
+
+    // ETAPA 3: SELADORA DE BLISTER E ALAVANCA
+    let alavancaSeladoraMesh = null;
+    function criarSeladoraBlister() {
+      const grupo = new THREE.Group();
+
+      const base = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.08, 0.6), matInoxEscuro);
+      base.position.y = 0.04;
+
+      const prensaTermica = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.08, 0.35), matInox);
+      prensaTermica.position.set(0, 0.12, 0);
+
+      // Alavanca de Pressão
+      alavancaSeladoraMesh = new THREE.Group();
+      alavancaSeladoraMesh.position.set(0, 0.25, -0.15);
+
+      const braço = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.45, 16), matInox);
+      braço.rotation.x = Math.PI / 4;
+      braço.position.set(0, 0.15, 0.1);
+
+      const bola = new THREE.Mesh(new THREE.SphereGeometry(0.045, 16, 16), matInoxEscuro);
+      bola.position.set(0, 0.3, 0.25);
+
+      alavancaSeladoraMesh.add(braço, bola);
+      grupo.add(base, prensaTermica, alavancaSeladoraMesh);
+      return grupo;
+    }
+
+    // Blister de Comprimidos (Draggable 3 / Produto Final)
+    function criarCartelaBlister() {
+      const grupo = new THREE.Group();
+
+      const cartelaPlastico = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.015, 0.24), matPlasticoBolha);
+      cartelaPlastico.position.y = 0.01;
+
+      // Moldar 6 comprimidos na cartela
+      const pillsGroup = new THREE.Group();
+      for (let x = -0.1; x <= 0.1; x += 0.1) {
+        for (let z = -0.06; z <= 0.06; z += 0.06) {
+          const pill = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.02, 16), matPillAzul);
+          pill.position.set(x, 0.018, z);
+          pillsGroup.add(pill);
+        }
+      }
+
+      // Folha de Alumínio Selada (Verso)
+      const folhaAluminio = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.005, 0.24), matAluminioBlister);
+      folhaAluminio.position.y = 0.002;
+      folhaAluminio.visible = false;
+
+      grupo.add(cartelaPlastico, pillsGroup, folhaAluminio);
+      grupo.userData = { folhaAluminio: folhaAluminio, pills: pillsGroup };
+      return grupo;
+    }
+
+    // GRUPOS DAS ETAPAS
+    let etapaAtual = 1;
+    let emMistura = false;
+    let progressoMistura = 0;
+    let comprimidosPressionados = false;
+    let blisterSelado = false;
+    let executandoAnimacao = false;
+
+    const targetPos = new THREE.Vector3();
+    const currentPos = new THREE.Vector3();
+
+    const grupoEtapa1 = new THREE.Group();
+    const grupoEtapa2 = new THREE.Group();
+    const grupoEtapa3 = new THREE.Group();
+
+    scene.add(grupoEtapa1, grupoEtapa2, grupoEtapa3);
+    grupoEtapa2.visible = false;
+    grupoEtapa3.visible = false;
+
+    // Instâncias
+    const misturadorObj = criarMisturadorGranulador();
+    misturadorObj.position.set(0.4, 0, 0);
+    grupoEtapa1.add(misturadorObj);
+
+    const potePoObj = criarPotePo();
+    potePoObj.position.set(-0.55, 0.02, 0);
+    grupoEtapa1.add(potePoObj);
+
+    const prensaObj = criarPrensaHidraulica();
+    prensaObj.position.set(0.3, 0, 0);
+    grupoEtapa2.add(prensaObj);
+
+    const bandejaMassaObj = criarBandejaMassa();
+    bandejaMassaObj.position.set(-0.55, 0.02, 0);
+    grupoEtapa2.add(bandejaMassaObj);
+
+    const seladoraObj = criarSeladoraBlister();
+    seladoraObj.position.set(0.3, 0, 0);
+    grupoEtapa3.add(seladoraObj);
+
+    const cartelaBlisterObj = criarCartelaBlister();
+    cartelaBlisterObj.position.set(-0.55, 0.02, 0);
+    grupoEtapa3.add(cartelaBlisterObj);
+
+    // CONTROLE DE ARRASTAR (RAYCASTER)
+    let isDragging = false;
+    let dragTarget = null;
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const intersectionPoint = new THREE.Vector3();
+
+    function updateMousePosition(e) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+      mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    }
+
+    function onStart(e) {
+      if (!minigameIniciado || executandoAnimacao || e.target.closest('.footer-panel') || e.target.closest('#finish-modal')) return;
+
+      updateMousePosition(e);
+      raycaster.setFromCamera(mouse, camera);
+
+      let activeGroup = null;
+      if (etapaAtual === 1) activeGroup = potePoObj;
+      else if (etapaAtual === 2) activeGroup = bandejaMassaObj;
+      else if (etapaAtual === 3) activeGroup = cartelaBlisterObj;
+
+      if (!activeGroup) return;
+
+      const intersects = raycaster.intersectObjects(activeGroup.children, true);
+
+      if (intersects.length > 0) {
+        isDragging = true;
+        dragTarget = activeGroup;
+        document.body.style.cursor = 'grabbing';
+
+        if (raycaster.ray.intersectPlane(dragPlane, intersectionPoint)) {
+          targetPos.copy(intersectionPoint);
+          currentPos.copy(dragTarget.position);
+        }
+      }
+    }
+
+    function onMove(e) {
+      if (!minigameIniciado || !isDragging || !dragTarget || executandoAnimacao) return;
+
+      updateMousePosition(e);
+      raycaster.setFromCamera(mouse, camera);
+
+      if (raycaster.ray.intersectPlane(dragPlane, intersectionPoint)) {
+        dragTarget.position.set(
+          Math.max(-1.2, Math.min(1.2, intersectionPoint.x)),
+          dragTarget.position.y,
+          Math.max(-0.8, Math.min(0.8, intersectionPoint.z))
+        );
+      }
+    }
+
+    function onEnd() {
+      if (!minigameIniciado || !isDragging || !dragTarget || executandoAnimacao) return;
+
+      isDragging = false;
+      document.body.style.cursor = 'default';
+
+      if (etapaAtual === 1) {
+        if (potePoObj.position.distanceTo(misturadorObj.position) < 0.55) {
+          executandoAnimacao = true;
+          potePoObj.position.set(0.4, 0.58, 0);
+          potePoObj.rotation.z = Math.PI / 1.8;
+
+          document.getElementById('instruction-text').textContent = "Despejando pó composto...";
+          
+          setTimeout(() => {
+            misturadorObj.userData.poInterno.visible = true;
+            potePoObj.position.set(-0.55, 0.02, 0);
+            potePoObj.rotation.z = 0;
+
+            document.getElementById('instruction-text').textContent = "⚙️ Misturando e granulando fármaco...";
+            document.getElementById('progress-fill').style.width = "33%";
+
+            // Animação de Giro do Tambor
+            let giros = 0;
+            const giroInterval = setInterval(() => {
+              giros += 0.15;
+              tamborRotativoMesh.rotation.x += 0.2;
+
+              if (giros >= 4) {
+                clearInterval(giroInterval);
+                executandoAnimacao = false;
+                setTimeout(() => transitarParaEtapa(2), 600);
+              }
+            }, 50);
+          }, 1000);
+        } else {
+          potePoObj.position.set(-0.55, 0.02, 0);
+        }
+      }
+      else if (etapaAtual === 2) {
+        if (bandejaMassaObj.position.distanceTo(prensaObj.position) < 0.55) {
+          executandoAnimacao = true;
+          bandejaMassaObj.position.set(0.3, 0.12, -0.1);
+
+          document.getElementById('instruction-text').textContent = "⚙️ Acionando Prensa Hidráulica...";
+
+          // Animação do Pistão Descendo
+          let desceu = 0;
+          const prensaInterval = setInterval(() => {
+            desceu += 0.02;
+            pistaoPrensaMesh.position.y -= 0.02;
+
+            if (desceu >= 0.24) {
+              clearInterval(prensaInterval);
+
+              setTimeout(() => {
+                // Sobe o pistão
+                const sobeInterval = setInterval(() => {
+                  pistaoPrensaMesh.position.y += 0.02;
+                  if (pistaoPrensaMesh.position.y >= 0.52) {
+                    clearInterval(sobeInterval);
+
+                    comprimidosPressionados = true;
+                    executandoAnimacao = false;
+                    document.getElementById('instruction-text').textContent = "✅ Granulado comprimido em pílulas!";
+                    document.getElementById('progress-fill').style.width = "66%";
+
+                    setTimeout(() => transitarParaEtapa(3), 800);
+                  }
+                }, 30);
+              }, 400);
+            }
+          }, 30);
+        } else {
+          bandejaMassaObj.position.set(-0.55, 0.02, 0);
+        }
+      }
+      else if (etapaAtual === 3) {
+        if (cartelaBlisterObj.position.distanceTo(seladoraObj.position) < 0.55) {
+          executandoAnimacao = true;
+          cartelaBlisterObj.position.set(0.3, 0.16, 0);
+
+          document.getElementById('instruction-text').textContent = "⚙️ Selando com folha de alumínio térmico...";
+
+          // Animação da Alavanca
+          let angulo = 0;
+          const alavancaInterval = setInterval(() => {
+            angulo += 0.08;
+            alavancaSeladoraMesh.rotation.x = Math.min(Math.PI / 3, angulo);
+
+            if (alavancaSeladoraMesh.rotation.x >= Math.PI / 3) {
+              clearInterval(alavancaInterval);
+
+              setTimeout(() => {
+                cartelaBlisterObj.userData.folhaAluminio.visible = true;
+
+                // Retorna alavanca
+                const voltaInterval = setInterval(() => {
+                  alavancaSeladoraMesh.rotation.x -= 0.08;
+                  if (alavancaSeladoraMesh.rotation.x <= 0) {
+                    clearInterval(voltaInterval);
+                    
+                    blisterSelado = true;
+                    executandoAnimacao = false;
+                    document.getElementById('instruction-text').textContent = "✅ Cartela Blister perfeitamente selada!";
+                    document.getElementById('progress-fill').style.width = "100%";
+                    document.getElementById('btn-action').disabled = false;
+                  }
+                }, 30);
+              }, 600);
+            }
+          }, 30);
+        } else {
+          cartelaBlisterObj.position.set(-0.55, 0.02, 0);
+        }
+      }
+
+      dragTarget = null;
+    }
+
+    window.addEventListener('pointerdown', onStart);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onEnd);
+
+    function transitarParaEtapa(novaEtapa) {
+      const fadeScreen = document.getElementById('fade-screen');
+      fadeScreen.style.opacity = '1';
+
+      setTimeout(() => {
+        etapaAtual = novaEtapa;
+
+        grupoEtapa1.visible = (etapaAtual === 1);
+        grupoEtapa2.visible = (etapaAtual === 2);
+        grupoEtapa3.visible = (etapaAtual === 3);
+
+        if (etapaAtual === 2) {
+          document.getElementById('step-indicator').textContent = "ETAPA 2 DE 3: COMPRESSÃO EM PRENSA";
+          document.getElementById('instruction-text').textContent = "🦾 Arraste a Bandeja de Massa até a Prensa Hidráulica!";
+        } else if (etapaAtual === 3) {
+          document.getElementById('step-indicator').textContent = "ETAPA 3 DE 3: SELAGEM BLISTER";
+          document.getElementById('instruction-text').textContent = "📦 Arraste a Cartela até a Seladora Térmica!";
+        }
+
+        fadeScreen.style.opacity = '0';
+      }, 400);
+    }
+
+    // INTEGRAÇÃO COM NUI / GTA SAMP CEF
+    function coletarProduto() {
+      document.getElementById('finish-modal').classList.add('active');
+
+      if (window.GetParentResourceName) {
+        fetch(`https://${GetParentResourceName()}/finalizarProcesso`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sucesso: true, quantidade: 10, item: "comprimidos_hospitalares" })
+        });
+      }
+    }
+
+    function fecharModal() {
+      document.getElementById('finish-modal').classList.remove('active');
+      if (window.Android && typeof window.Android.close === 'function') {
+        window.Android.close();
+        return;
+      }
+      if (typeof window.__sampCloseLocalUi === 'function') {
+        window.__sampCloseLocalUi();
+        return;
+      }
+      try { window.close(); } catch (e) {}
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Nova Era • Marcadores 3D</title>
+<style>
+:root { color-scheme: only light; }
+* { box-sizing: border-box; }
+html, body, #world { width:100%; height:100%; margin:0; overflow:hidden; background:transparent !important; }
+body { pointer-events:none; font-family:Inter,Roboto,Arial,sans-serif; }
+#world { position:fixed; inset:0; perspective:800px; transform-style:preserve-3d; }
+.marker { position:absolute; left:0; top:0; width:128px; height:118px; transform:translate(-50%,-100%); transform-origin:50% 100%; will-change:left,top,transform; opacity:0; transition:opacity .16s ease; }
+.marker.visible { opacity:1; }
+.floor { position:absolute; width:92px; height:34px; left:18px; bottom:-5px; border:2px solid var(--tone); border-radius:50%; transform:rotateX(61deg); background:radial-gradient(ellipse, color-mix(in srgb, var(--tone) 35%, transparent), transparent 70%); box-shadow:0 0 16px color-mix(in srgb, var(--tone) 75%, transparent), inset 0 0 10px color-mix(in srgb, var(--tone) 60%, transparent); animation:floorPulse 1.6s ease-in-out infinite; }
+.floor::before,.floor::after { content:""; position:absolute; inset:5px -2px; border:1px solid color-mix(in srgb, var(--tone) 75%, transparent); border-radius:50%; animation:spin 2.8s linear infinite; }
+.floor::after { inset:-5px 9px; opacity:.55; animation-direction:reverse; }
+.beam { position:absolute; left:62px; bottom:16px; width:2px; height:54px; background:linear-gradient(0deg,color-mix(in srgb,var(--tone) 75%,transparent),transparent); filter:drop-shadow(0 0 5px var(--tone)); }
+.badge { position:absolute; left:64px; bottom:54px; width:43px; height:43px; margin-left:-21px; margin-bottom:var(--lift,0px); display:grid; place-items:center; border:1px solid color-mix(in srgb,var(--tone) 90%,white); border-radius:14px; background:linear-gradient(145deg,rgba(16,24,43,.94),rgba(5,12,25,.82)); box-shadow:0 0 18px color-mix(in srgb,var(--tone) 72%,transparent),inset 0 0 10px color-mix(in srgb,var(--tone) 25%,transparent); color:white; font-size:23px; text-shadow:0 0 10px var(--tone); transform-style:preserve-3d; animation:float 1.8s ease-in-out infinite; }
+.badge::after { content:""; position:absolute; inset:-4px; border:1px solid color-mix(in srgb,var(--tone) 50%,transparent); border-radius:17px; transform:translateZ(-5px); }
+.glyph { display:block; animation:turn 3.8s linear infinite; backface-visibility:visible; }
+.label { position:absolute; left:64px; bottom:103px; transform:translateX(-50%); min-width:max-content; padding:4px 8px; border:1px solid color-mix(in srgb,var(--tone) 52%,transparent); border-radius:6px; background:rgba(4,10,22,.78); color:#f5f7ff; font-size:9px; font-weight:800; letter-spacing:1.1px; text-shadow:0 1px 3px #000; box-shadow:0 0 10px color-mix(in srgb,var(--tone) 25%,transparent); }
+.marker[data-kind="0"],.marker[data-kind="1"],.marker[data-kind="2"] { --tone:#45d8ff; }
+.marker[data-kind="1"] { --tone:#70f3b2; }
+.marker[data-kind="2"] { --tone:#f5bf62; }
+.marker[data-kind="3"] { --tone:#c28bff; }
+@keyframes float { 0%,100% { transform:translateY(0) rotateX(7deg); } 50% { transform:translateY(-8px) rotateX(-5deg); } }
+@keyframes turn { from { transform:rotateY(0deg); } to { transform:rotateY(360deg); } }
+@keyframes spin { from { transform:rotate(0deg) scaleX(1); } to { transform:rotate(360deg) scaleX(1); } }
+@keyframes floorPulse { 0%,100% { opacity:.62; filter:brightness(.85); } 50% { opacity:1; filter:brightness(1.35); } }
+@media (prefers-reduced-motion:reduce) { .badge,.glyph,.floor,.floor::before,.floor::after { animation-duration:8s; } }
+</style>
+</head>
+<body>
+<div id="world" aria-hidden="true"></div>
+<script>
+(() => {
+  const root = document.getElementById('world');
+  const nodes = new Map();
+  let syncVersion = 0;
+  const styles = {
+    0: { icon: '⌂', label: id => `SEDE • ORG #${Math.floor(id / 10)}` },
+    1: { icon: '🚘', label: id => `GARAGEM • ORG #${Math.floor(id / 10)}` },
+    2: { icon: '⚒', label: id => `ARMARIA • ORG #${Math.floor(id / 10)}` },
+    3: { icon: '⌂', label: id => `CASA #${id - 1000}` }
+  };
+  function nodeFor(id, kind) {
+    let node = nodes.get(id);
+    if (node && Number(node.dataset.kind) === kind) return node;
+    if (node) node.remove();
+    node = document.createElement('div');
+    node.className = 'marker';
+    node.dataset.kind = String(kind);
+    const style = styles[kind] || styles[0];
+    node.innerHTML = '<div class="floor"></div><div class="beam"></div><div class="badge"><span class="glyph"></span></div><div class="label"></div>';
+    node.querySelector('.glyph').textContent = style.icon;
+    node.querySelector('.label').textContent = style.label(id);
+    root.appendChild(node);
+    nodes.set(id, node);
+    return node;
+  }
+  window.beginWorldMarkerSync = () => { syncVersion++; };
+  window.upsertWorldMarker = (id, kind, x, y, z) => {
+    const node = nodeFor(Number(id), Number(kind));
+    node._world = [Number(x), Number(y), Number(z)];
+    node._syncVersion = syncVersion;
+  };
+  window.finishWorldMarkerSync = () => {
+    for (const [id, node] of nodes) if (node._syncVersion !== syncVersion) { node.remove(); nodes.delete(id); }
+  };
+  window.clearWorldMarkers = () => { nodes.clear(); root.replaceChildren(); };
+  let lastFrame = 0;
+  function projectFrame(now) {
+    requestAnimationFrame(projectFrame);
+    if (now - lastFrame < 33) return;
+    lastFrame = now;
+    if (!window.Android || typeof Android.projectWorldPoint !== 'function') return;
+    for (const node of nodes.values()) {
+      if (!node._world) continue;
+      let point;
+      try { point = JSON.parse(Android.projectWorldPoint(node._world[0], node._world[1], node._world[2])); }
+      catch (_) { node.classList.remove('visible'); continue; }
+      if (!point.visible || !Number.isFinite(point.x) || !Number.isFinite(point.y)) { node.classList.remove('visible'); continue; }
+      node.style.left = `${point.x * innerWidth}px`;
+      node.style.top = `${point.y * innerHeight}px`;
+      const scale = Math.max(.56, Math.min(1.15, 10 / Math.max(1, point.depth)));
+      node.style.transform = `translate(-50%,-100%) scale(${scale})`;
+      node.classList.add('visible');
+    }
+  }
+  requestAnimationFrame(projectFrame);
+})();
+</script>
+</body>
+</html>

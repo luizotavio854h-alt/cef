@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tablet OS - Departamento de Polícia</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Rajdhani', sans-serif;
+      user-select: none;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: transparent; /* Fundo transparente para ver o jogo ao fundo */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      color: #e2e8f0;
+    }
+
+    /* CARCAÇA FÍSICA DO TABLET (AJUSTADA PARA RESPONSIVIDADE EM LANDSCAPE) */
+    .device-body {
+      width: min(92vw, 1280px, calc(78vh * 1.7778));
+      height: auto;
+      max-height: 78vh;
+      aspect-ratio: 16 / 9;
+      background: linear-gradient(145deg, #1e2638, #0b101d);
+      border-radius: clamp(18px, 3vw, 30px);
+      padding: clamp(7px, 1.1vw, 12px);
+      position: relative;
+      box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.85),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .camera-lens {
+      position: absolute;
+      top: 50%;
+      left: 6px;
+      transform: translateY(-50%);
+      width: 7px;
+      height: 7px;
+      background: #090b0e;
+      border: 2px solid #2a3a5c;
+      border-radius: 50%;
+      z-index: 10;
+    }
+
+    .power-button {
+      position: absolute;
+      top: -5px;
+      right: 60px;
+      width: 40px;
+      height: 5px;
+      background: #2a3a5c;
+      border-radius: 4px 4px 0 0;
+      cursor: pointer;
+    }
+
+    /* TELA DE DISPLAY */
+    .screen-display {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.55)), url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;
+      border-radius: clamp(10px, 2vw, 22px);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+    }
+
+    /* BARRA DE STATUS TOP */
+    .status-bar {
+      height: 24px;
+      width: 100%;
+      background: rgba(10, 16, 29, 0.65);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #fff;
+      z-index: 50;
+      border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .status-bar .right-icons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* TELA INICIAL (HOMESCREEN) */
+    .homescreen {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+      align-content: flex-start;
+      flex-wrap: wrap;
+      transition: all 0.3s ease;
+    }
+
+    .app-icon {
+      width: 75px;
+      height: 90px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .app-icon:hover {
+      transform: scale(1.08);
+    }
+
+    .app-box {
+      width: 55px;
+      height: 55px;
+      border-radius: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.4rem;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .app-box.police {
+      background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
+      box-shadow: 0 6px 15px rgba(29, 78, 216, 0.4);
+    }
+
+    .app-box.records {
+      background: linear-gradient(135deg, #0284c7, #0f172a);
+      box-shadow: 0 6px 15px rgba(2, 132, 199, 0.4);
+    }
+
+    .app-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      text-align: center;
+    }
+
+    /* JANELA DOS APLICATIVOS */
+    .app-window {
+      position: absolute;
+      top: 24px; left: 0; width: 100%;
+      height: calc(100% - 24px);
+      min-width: 0;
+      min-height: 0;
+      background: #090d16;
+      display: flex;
+      transform: scale(0.95);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 40;
+    }
+
+    .app-window.open {
+      transform: scale(1);
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .app-window.record-view .sidebar {
+      display: none;
+    }
+
+    .app-window.record-view .content-area {
+      width: 100%;
+      padding: clamp(14px, 2vw, 28px);
+      overflow-y: auto;
+    }
+
+    .app-window.record-view .tab-header,
+    .app-window.record-view .search-box {
+      display: none;
+    }
+
+    /* SIDEBAR DA APP */
+    .sidebar {
+      width: clamp(130px, 16vw, 180px);
+      flex: 0 0 clamp(130px, 16vw, 180px);
+      background: #050810;
+      border-right: 1px solid rgba(59, 130, 246, 0.2);
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .org-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .org-header i { font-size: 1.3rem; color: #3b82f6; }
+    .org-header h2 { font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: #fff; text-transform: uppercase; }
+
+    .nav-menu { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: rgba(59, 130, 246, 0.18);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #fff;
+    }
+
+    /* CONTEÚDO */
+    .content-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      padding: clamp(10px, 1.1vw, 16px);
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-content { display: none; flex: 1; min-height: 0; flex-direction: column; overflow: auto; }
+    .tab-content.active { display: flex; }
+
+    .tab-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .tab-header h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .btn-action {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: #3b82f6;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+    }
+
+    /* TABELA POLICIAL */
+    .table-container {
+      width: 100%;
+      background: #04070d;
+      border-radius: 8px;
+      border: 1px solid rgba(59, 130, 246, 0.15);
+      overflow-x: auto;
+    }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+
+    th {
+      background: #0e1726;
+      color: #64748b;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      padding: 8px 12px;
+      letter-spacing: 1px;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .badge-rank {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+
+    .actions-cell { display: flex; gap: 4px; }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .btn-icon:hover { background: #2563eb; color: #fff; }
+    .btn-icon.danger:hover { background: #dc2626; }
+
+    /* ESTILOS FICHA DO PLAYER */
+    .search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .search-input {
+      flex: 1;
+      background: #04070d;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .profile-card {
+      background: #04070d;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .profile-avatar {
+      width: 60px;
+      height: 60px;
+      background: #1e293b;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.8rem;
+      color: #64748b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .profile-info h4 { font-family: 'Orbitron', sans-serif; font-size: 1rem; color: #fff; }
+    .profile-info p { color: #94a3b8; font-size: 0.8rem; margin-top: 2px; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    .tag-clean { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .tag-wanted { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .records-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .search-result-area {
+      flex: none;
+      min-height: 100%;
+      display: none;
+      flex-direction: column;
+    }
+
+    .search-result-area.active {
+      display: flex;
+    }
+
+    .search-result-area .profile-card {
+      flex: 0 0 auto;
+      min-height: 92px;
+      padding: 16px;
+    }
+
+    .search-result-area .profile-avatar {
+      width: 72px;
+      height: 72px;
+      font-size: 2rem;
+    }
+
+    .search-result-area .records-grid {
+      flex: none;
+    }
+
+    .search-result-area .record-box {
+      min-height: 160px;
+      overflow: visible;
+    }
+
+    .search-result-area .record-list {
+      overflow: visible;
+    }
+
+    .occurrence-preview {
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .occurrence-preview:hover {
+      background: #132238;
+      border-color: rgba(59, 130, 246, 0.5);
+    }
+
+    .occurrence-status {
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .occurrence-status.open {
+      color: #4ade80;
+    }
+
+    .occurrence-status.closed {
+      color: #f87171;
+    }
+
+    .occurrence-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .occurrence-row small {
+      color: #64748b;
+      white-space: nowrap;
+    }
+
+    .occurrences-window .content-area {
+      width: 100%;
+      padding: clamp(14px, 2vw, 28px);
+      overflow-y: auto;
+    }
+
+    .occurrences-window .sidebar {
+      display: none;
+    }
+
+    .occurrence-filters {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .occurrence-filter {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #94a3b8;
+      padding: 7px 12px;
+      border-radius: 5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .occurrence-filter.active,
+    .occurrence-filter:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.5);
+      color: #fff;
+    }
+
+    .occurrences-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .officer-status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-right: 6px;
+      border-radius: 50%;
+      vertical-align: middle;
+      box-shadow: 0 0 6px currentColor;
+    }
+
+    .officer-status-dot.online {
+      color: #4ade80;
+      background: #4ade80;
+    }
+
+    .officer-status-dot.offline {
+      color: #f87171;
+      background: #f87171;
+    }
+
+    .occurrence-item {
+      background: #04070d;
+      border: 1px solid rgba(59, 130, 246, 0.18);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .occurrence-item p {
+      color: #cbd5e1;
+      margin-top: 5px;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 700px) {
+      .search-result-area .records-grid {
+        grid-template-columns: 1fr;
+        overflow: visible;
+      }
+
+      .search-result-area .record-box {
+        min-height: 120px;
+      }
+    }
+
+    .record-box {
+      background: #0e1726;
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .record-box h5 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+      color: #60a5fa;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .record-list {
+      list-style: none;
+      font-size: 0.78rem;
+      color: #cbd5e1;
+    }
+
+    .record-list li {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* BARRA INFERIOR / HOME INDICATOR */
+    .home-bar-area {
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      width: 100%;
+      height: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 60;
+      cursor: pointer;
+    }
+
+    .home-indicator {
+      width: 100px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .home-bar-area:hover .home-indicator {
+      background: #3b82f6;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-box {
+      width: min(320px, 90%);
+      background: #090d16;
+      border: 1px solid #3b82f6;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .modal-box h4 { font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: #fff; margin-bottom: 10px; }
+
+    .form-group { margin-bottom: 10px; display: flex; flex-direction: column; gap: 3px; }
+    .form-group label { color: #64748b; font-size: 0.7rem; }
+    .form-group input, .form-group select {
+      background: #04070d;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 6px 8px;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .modal-buttons { display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; }
+    .btn-cancel { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #aaa; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; }
+
+    /* REGRA ESPECÍFICA PARA DISPOSITIVOS EM LANDSCAPE PEQUENOS (MOBILE / APK SAMP) */
+    @media (max-height: 480px) {
+      .device-body {
+        width: min(94vw, 1280px, calc(78vh * 1.7778));
+        height: auto;
+        max-height: 78vh;
+        aspect-ratio: 16 / 9;
+      }
+      .sidebar { width: 140px; }
+      .app-icon { width: 60px; height: 75px; }
+      .app-box { width: 45px; height: 45px; font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CARCAÇA DO TABLET -->
+  <div class="device-body">
+    <div class="camera-lens"></div>
+    <div class="power-button" onclick="togglePower()"></div>
+
+    <!-- TELA PRINCIPAL -->
+    <div class="screen-display" id="screenDisplay">
+
+      <!-- BARRA DE STATUS -->
+      <div class="status-bar">
+        <span id="clockDisplay">12:00</span>
+        <div class="right-icons">
+          <i class="fa-solid fa-wifi"></i>
+          <i class="fa-solid fa-shield-halved" style="color: #60a5fa;"></i>
+          <i class="fa-solid fa-battery-three-quarters"></i>
+        </div>
+      </div>
+
+      <!-- TELA INICIAL (HOMESCREEN COM 2 APPS) -->
+      <div class="homescreen">
+        <!-- APP 1: GESTÃO DA CORPORAÇÃO -->
+        <div class="app-icon" onclick="openApp('corpApp')">
+          <div class="app-box police">
+            <i class="fa-solid fa-shield-cat"></i>
+          </div>
+          <span class="app-label">MDT Policial</span>
+        </div>
+
+        <!-- APP 2: CONSULTA DE FICHA -->
+        <div class="app-icon" onclick="openApp('recordsApp')">
+          <div class="app-box records">
+            <i class="fa-solid fa-id-card"></i>
+          </div>
+          <span class="app-label">Ficha Criminal</span>
+        </div>
+      </div>
+
+      <!-- APP 1: GESTÃO DA CORPORAÇÃO -->
+      <div class="app-window" id="corpApp">
+        <div class="sidebar">
+          <div>
+            <div class="org-header">
+              <i class="fa-solid fa-shield-halved"></i>
+              <div>
+                <h2 id="policeDeptTitle"></h2>
+                <span style="font-size: 0.65rem; color: #64748b;">SISTEMA CENTRAL</span>
+              </div>
+            </div>
+
+            <div class="nav-menu">
+              <button class="nav-btn active" onclick="switchTab('officers', event)">
+                <i class="fa-solid fa-user-shield"></i> Efetivo
+              </button>
+              <button class="nav-btn" onclick="switchTab('ranks', event)">
+                <i class="fa-solid fa-ranking-star"></i> Patentes
+              </button>
+            </div>
+          </div>
+
+          <div style="font-size: 0.65rem; color: #475569; text-align: center;">
+            Police OS v4.0
+          </div>
+        </div>
+
+        <div class="content-area">
+
+          <!-- TAB: EFETIVO / OFICIAIS -->
+          <div id="tab-officers" class="tab-content active">
+            <div class="tab-header">
+              <h3>EFETIVO POLICIAL</h3>
+              <button class="btn-action" onclick="openModal('addOfficer')" id="btnAddOfficer" style="display: none;">
+                <i class="fa-solid fa-user-plus"></i> Recrutar Oficial
+              </button>
+            </div>
+
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>PASSAPORTE</th>
+                    <th>NOME COMPLETO</th>
+                    <th>PATENTE</th>
+                    <th>AÇÕES</th>
+                  </tr>
+                </thead>
+                <tbody id="officers-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB: PATENTES -->
+          <div id="tab-ranks" class="tab-content">
+            <div class="tab-header">
+              <h3>PATENTES & CARGOS</h3>
+              <button class="btn-action" onclick="openModal('addRank')" id="btnAddRank" style="display: none;">
+                <i class="fa-solid fa-plus"></i> Nova Patente
+              </button>
+            </div>
+
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>HIERARQUIA</th>
+                    <th>PATENTE</th>
+                    <th>AÇÕES</th>
+                  </tr>
+                </thead>
+                <tbody id="ranks-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- APP 2: FICHA CRIMINAL DE JOGADORES -->
+      <div class="app-window" id="recordsApp">
+        <div class="sidebar">
+          <div>
+            <div class="org-header">
+              <i class="fa-solid fa-folder-open"></i>
+              <div>
+                <h2>BANCO DE DADOS</h2>
+                <span style="font-size: 0.65rem; color: #64748b;">CONSULTA DE CIDADAOS</span>
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 0.65rem; color: #475569; text-align: center;">
+            Policial DB v2.0
+          </div>
+        </div>
+
+        <div class="content-area">
+          <div class="tab-header">
+            <h3>CONSULTA DE FICHA CRIMINAL</h3>
+          </div>
+
+          <div class="search-box">
+            <input type="text" id="searchInput" class="search-input" placeholder="Digite o ID fixo do jogador (Ex: 101)...">
+            <button class="btn-action" onclick="searchPlayer()">
+              <i class="fa-solid fa-magnifying-glass"></i> Buscar
+            </button>
+          </div>
+
+          <!-- RESULTADO DA BUSCA -->
+          <div id="searchResultArea" class="search-result-area">
+            <div class="profile-card">
+              <div class="profile-avatar">
+                <i class="fa-solid fa-user-secret"></i>
+              </div>
+              <div class="profile-info">
+                <h4 id="profileName">Carlos_Gotta</h4>
+                <p>Passaporte: <strong id="profileId" style="color: #fff;">101</strong></p>
+                <p>Porte de Armas: <strong id="profileGunLicense" style="color: #4ade80;">VÁLIDO</strong></p>
+                <div id="profileStatusTag"></div>
+              </div>
+            </div>
+
+            <div class="records-grid">
+              <!-- PRISÕES -->
+              <div class="record-box occurrence-preview" onclick="openOccurrences()" title="Ver todas as ocorrências">
+                <h5><i class="fa-solid fa-file-circle-exclamation"></i> Ocorrências</h5>
+                <ul class="record-list" id="arrestsList"></ul>
+              </div>
+
+              <!-- MULTAS -->
+              <div class="record-box">
+                <h5><i class="fa-solid fa-file-invoice-dollar"></i> Multas Pendentes</h5>
+                <ul class="record-list" id="finesList"></ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- MENSAGEM INICIAL DE BUSCA -->
+          <div id="emptySearchArea" class="empty-search-area" style="text-align: center; color: #64748b; margin-top: 30px;">
+            <i class="fa-solid fa-address-card" style="font-size: 2.5rem; margin-bottom: 8px;"></i>
+            <p>Insira o ID fixo acima para consultar o histórico criminal do cidadão.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="app-window occurrences-window" id="occurrencesApp">
+        <div class="content-area">
+          <div class="tab-header">
+            <h3>OCORRÊNCIAS DE <span id="occurrencesProfileName"></span></h3>
+          </div>
+          <div class="occurrence-filters">
+            <button class="occurrence-filter active" data-filter="all" onclick="filterOccurrences('all', this)">Todas</button>
+            <button class="occurrence-filter" data-filter="open" onclick="filterOccurrences('open', this)">Abertas</button>
+            <button class="occurrence-filter" data-filter="closed" onclick="filterOccurrences('closed', this)">Fechadas</button>
+          </div>
+          <div class="occurrences-list" id="allOccurrencesList"></div>
+        </div>
+      </div>
+
+      <!-- BARRA DE NAVEGAÇÃO HOME DO TABLET -->
+      <div class="home-bar-area" onclick="goHome()">
+        <div class="home-indicator"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL DE OFICIAIS -->
+  <div class="modal-overlay" id="modalOfficer">
+    <div class="modal-box">
+      <h4 id="modalOfficerTitle">RECRUTAR OFICIAL</h4>
+      <input type="hidden" id="editOfficerId">
+      
+      <div class="form-group" id="groupOfficerPlayerId">
+        <label>Passaporte (ID)</label>
+        <input type="number" id="officerPlayerId" placeholder="Ex: 55">
+      </div>
+
+      <div class="form-group">
+        <label>Patente</label>
+        <select id="officerRankSelect"></select>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn-cancel" onclick="closeModal('modalOfficer')">Cancelar</button>
+        <button class="btn-action" onclick="saveOfficer()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE PATENTES -->
+  <div class="modal-overlay" id="modalRank">
+    <div class="modal-box">
+      <h4 id="modalRankTitle">NOVA PATENTE</h4>
+      <input type="hidden" id="editRankId">
+
+      <div class="form-group">
+        <label>Nome da Patente</label>
+        <input type="text" id="rankName" placeholder="Ex: Capitão">
+      </div>
+
+      <div class="form-group">
+        <label>Tipo da Patente</label>
+        <select id="rankType">
+          <option value="normal">Normal</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn-cancel" onclick="closeModal('modalRank')">Cancelar</button>
+        <button class="btn-action" onclick="saveRank()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let policeDeptName = "";
+    let currentUserRankType = 'normal';
+    let currentUserIsLeader = false;
+    let pendingPoliceData = null;
+    let pendingPoliceRanks = [];
+    let pendingPoliceOfficers = [];
+
+    function normalizeRankType(type) {
+      const value = String(type || 'normal').trim().toLowerCase();
+      if (value === 'lider' || value === 'leader' || value === 'admin') return 'admin';
+      return 'normal';
+    }
+
+    function flushPendingPoliceData() {
+      if (pendingPoliceData) {
+        const data = pendingPoliceData;
+        pendingPoliceData = null;
+        const rankType = normalizeRankType(data.userRankType || data.rankType || data.gmRankType || data.currentUserRankType || 'normal');
+        if (rankType !== 'admin' && rankType !== 'normal') {
+          closeApp();
+          return;
+        }
+        setPoliceData(data);
+      }
+
+      if (pendingPoliceRanks.length > 0) {
+        ranks.push(...pendingPoliceRanks);
+        pendingPoliceRanks = [];
+      }
+      if (pendingPoliceOfficers.length > 0) {
+        officers.push(...pendingPoliceOfficers);
+        pendingPoliceOfficers = [];
+      }
+      renderRanks();
+      renderOfficers();
+    }
+
+    function hasAccess(requiredType) {
+      const userType = normalizeRankType(currentUserRankType);
+      if (requiredType === 'normal') return true;
+      if (requiredType === 'admin') return userType === 'admin';
+      return false;
+    }
+
+    let ranks = [];
+    let officers = [];
+    let currentPlayerRecord = null;
+    let currentOccurrenceFilter = 'all';
+
+    let playersDatabase = [
+      {
+        playerId: 101,
+        name: "Carlos_Gotta",
+        hasGunLicense: true,
+        isWanted: true,
+        arrests: [
+          { reason: "Assalto à Mão Armada", time: "120 meses", date: "22/07/2026" },
+          { reason: "Direção Perigosa", time: "30 meses", date: "10/06/2026" }
+        ],
+        fines: [
+          { reason: "Excesso de Velocidade", amount: 5000 },
+          { reason: "Estacionamento Proibido", amount: 1200 }
+        ]
+      },
+      {
+        playerId: 102,
+        name: "Rodrigo_Lima",
+        hasGunLicense: false,
+        isWanted: false,
+        arrests: [],
+        fines: [
+          { reason: "Sinal Vermelho", amount: 1500 }
+        ]
+      }
+    ];
+
+    function setPoliceData(data) {
+      const departmentName = String(data.deptName || data.orgName || '').trim();
+      if (departmentName) {
+        policeDeptName = departmentName;
+        const departmentTitle = document.getElementById('policeDeptTitle');
+        if (departmentTitle) {
+          departmentTitle.innerText = departmentName.toUpperCase();
+        }
+      }
+      if (data.userRankType || data.rankType || data.gmRankType || data.currentUserRankType) {
+        currentUserRankType = normalizeRankType(data.userRankType || data.rankType || data.gmRankType || data.currentUserRankType);
+      }
+      currentUserIsLeader = data.isLeader === true || data.isLeader === 1;
+      if (Array.isArray(data.ranks) && data.ranks.length > 0) {
+        ranks = data.ranks;
+        renderRanks();
+      }
+      if (Array.isArray(data.officers) && data.officers.length > 0) {
+        officers = data.officers;
+        renderOfficers();
+      }
+      if (data.database) { playersDatabase = data.database; }
+    }
+
+    window.tabletBridge = {
+      open: function(data) {
+        setPoliceData(data || {});
+      },
+      reset: function() {
+        ranks = [];
+        officers = [];
+        renderRanks();
+        renderOfficers();
+      },
+      addRank: function(rank) {
+        if (!rank) return;
+        ranks.push(rank);
+        renderRanks();
+      },
+      addOfficer: function(officer) {
+        if (!officer) return;
+        officers.push(officer);
+        renderOfficers();
+      }
+    };
+
+    function sendCommand(cmd) {
+      const normalized = typeof cmd === 'string' ? cmd.trim() : '';
+      if (!normalized) return;
+
+      try {
+        if (window.Android && typeof window.Android.sendCommand === 'function') {
+          window.Android.sendCommand(normalized);
+          return;
+        }
+
+        if (window.CefBrowser && typeof window.CefBrowser.sendEvent === 'function') {
+          window.CefBrowser.sendEvent(20, 1, 'command|' + normalized);
+          return;
+        }
+
+        if (window.cef && typeof window.cef.emit === 'function') {
+          window.cef.emit('game:command', normalized);
+        }
+      } catch (e) {
+        console.error('[TABLET] sendCommand error:', e);
+      }
+    }
+
+    window.__tabletProcess = function(data) {
+      data = data || {};
+      if (data.action === 'policeRecord') {
+        displayPlayerRecord(data.record || null);
+        return;
+      }
+      if (data.action === 'policeRank') {
+        if (data.rank) {
+          if (document.readyState === 'loading') {
+            pendingPoliceRanks.push(data.rank);
+          } else {
+            ranks.push(data.rank);
+            renderRanks();
+          }
+        }
+        return;
+      }
+      if (data.action === 'policeOfficer') {
+        if (data.officer) {
+          if (document.readyState === 'loading') {
+            pendingPoliceOfficers.push(data.officer);
+          } else {
+            officers.push(data.officer);
+            renderOfficers();
+          }
+        }
+        return;
+      }
+
+      const hasPoliceFlag = data.isPolice === true || data.userRankType || data.deptName;
+
+      if (!hasPoliceFlag) {
+        closeApp();
+        return;
+      }
+
+      if (data.action === 'openPoliceTablet') {
+        const rankType = normalizeRankType(data.userRankType || data.rankType || data.gmRankType || data.currentUserRankType || 'normal');
+        if (rankType !== 'admin' && rankType !== 'normal') {
+          closeApp();
+          return;
+        }
+
+        if (document.readyState === 'loading') {
+          pendingPoliceData = data;
+          return;
+        }
+
+        setPoliceData(data);
+      } else if (data.action === 'closeTablet') {
+        closeApp();
+      }
+    };
+
+    window.addEventListener('message', function(event) {
+      window.__tabletProcess(event.data || {});
+    });
+
+    window.addEventListener('DOMContentLoaded', function() {
+      sendCommand('tbc ready');
+      flushPendingPoliceData();
+      const queuedEvents = window.__tabletQueue || [];
+      window.__tabletQueue = [];
+      queuedEvents.forEach(function(data) {
+        window.__tabletProcess(data);
+      });
+    });
+
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('clockDisplay').innerText = `${hours}:${minutes}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function openApp(appId) {
+      document.querySelectorAll('.app-window').forEach(app => app.classList.remove('open'));
+      const target = document.getElementById(appId);
+      if (target) target.classList.add('open');
+
+      if (appId === 'recordsApp') {
+        showRecordsSearch();
+        const searchInput = document.getElementById('searchInput');
+        const defaultPlayer = playersDatabase[0];
+
+        if (searchInput && !searchInput.value.trim() && defaultPlayer) {
+          searchInput.value = defaultPlayer.playerId;
+        }
+      }
+    }
+
+    function closeApp() {
+      document.querySelectorAll('.app-window').forEach(app => app.classList.remove('open'));
+      closeLocalOverlay();
+    }
+
+    function goHome() {
+      const occurrencesApp = document.getElementById('occurrencesApp');
+      if (occurrencesApp.classList.contains('open')) {
+        occurrencesApp.classList.remove('open');
+        document.getElementById('recordsApp').classList.add('open');
+        return;
+      }
+
+      const openAppWindow = document.querySelector('.app-window.open');
+      if (!openAppWindow) {
+        closeLocalOverlay();
+        return;
+      }
+
+      if (openAppWindow.id === 'recordsApp' && openAppWindow.classList.contains('record-view')) {
+        showRecordsSearch();
+        return;
+      }
+
+      openAppWindow.classList.remove('open');
+    }
+
+    function closeLocalOverlay() {
+      if (window.Android && typeof window.Android.close === 'function') {
+        window.Android.close();
+        return;
+      }
+      if (typeof window.__sampCloseLocalUi === 'function') {
+        window.__sampCloseLocalUi();
+        return;
+      }
+      try { window.close(); } catch (e) {}
+    }
+
+    function togglePower() {
+      const screen = document.getElementById('screenDisplay');
+      screen.style.opacity = screen.style.opacity === '0' ? '1' : '0';
+    }
+
+    function switchTab(tabName, ev) {
+      document.querySelectorAll('#corpApp .tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('#corpApp .nav-btn').forEach(el => el.classList.remove('active'));
+
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      if (ev && ev.currentTarget) {
+        ev.currentTarget.classList.add('active');
+      }
+    }
+
+    function getRankTypeLabel(type) {
+      return type === 'admin' ? 'Admin' : 'Normal';
+    }
+
+    function renderRanks() {
+      const tbody = document.getElementById('ranks-table-body');
+      const canManageRanks = currentUserIsLeader;
+      const addRankBtn = document.getElementById('btnAddRank');
+      if (addRankBtn) {
+        addRankBtn.style.display = canManageRanks || ranks.length === 0 ? 'flex' : 'none';
+      }
+
+      tbody.innerHTML = '';
+
+      ranks.forEach((rank, index) => {
+        const rankType = rank.type || 'normal';
+        const actionsHtml = canManageRanks
+          ? `
+              <button class="btn-icon" onclick="editRank(${rank.id})" title="Editar"><i class="fa-solid fa-pen"></i></button>
+              <button class="btn-icon danger" onclick="deleteRank(${rank.id})" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+            `
+          : '<span style="color:#64748b; font-size:0.72rem;">—</span>';
+
+        tbody.innerHTML += `
+          <tr>
+            <td>#${index + 1}</td>
+            <td>
+              <span class="badge-rank">${rank.name}</span>
+              <span style="margin-left:8px; font-size:11px; opacity:0.8;">(${getRankTypeLabel(rankType)})</span>
+            </td>
+            <td class="actions-cell">${actionsHtml}</td>
+          </tr>
+        `;
+      });
+
+      const select = document.getElementById('officerRankSelect');
+      select.innerHTML = '';
+      ranks.forEach(rank => {
+        select.innerHTML += `<option value="${rank.id}">${rank.name}</option>`;
+      });
+    }
+
+    function renderOfficers() {
+      const tbody = document.getElementById('officers-table-body');
+      const canManageOfficers = hasAccess('admin');
+      const addOfficerBtn = document.getElementById('btnAddOfficer');
+      if (addOfficerBtn) {
+        addOfficerBtn.style.display = canManageOfficers ? 'flex' : 'none';
+      }
+
+      tbody.innerHTML = '';
+
+      officers.forEach(officer => {
+        const rankObj = ranks.find(r => r.id === officer.rankId) || { name: officer.rankId === 0 ? 'Líder' : '', type: 'normal' };
+        const onlineValue = String(officer.online || '').trim().toLowerCase();
+        const isOnline = officer.online === true || onlineValue === '1' || onlineValue === 'true';
+        const statusClass = isOnline ? 'online' : 'offline';
+        const actionsHtml = canManageOfficers
+          ? `
+              <button class="btn-icon" onclick="editOfficer(${officer.id})" title="Promover/Rebaixar"><i class="fa-solid fa-user-pen"></i></button>
+              <button class="btn-icon danger" onclick="deleteOfficer(${officer.id})" title="Exonerar"><i class="fa-solid fa-user-minus"></i></button>
+            `
+          : '<span style="color:#64748b; font-size:0.72rem;">—</span>';
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${officer.playerId}</td>
+            <td><span class="officer-status-dot ${statusClass}" title="${isOnline ? 'Online' : 'Offline'}"></span>${officer.name || 'Não informado'}</td>
+            <td>${rankObj.name ? `<span class="badge-rank">${rankObj.name}</span>` : ''}</td>
+            <td class="actions-cell">${actionsHtml}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function displayPlayerRecord(result) {
+      const emptyArea = document.getElementById('emptySearchArea');
+      const resultArea = document.getElementById('searchResultArea');
+      const recordsApp = document.getElementById('recordsApp');
+
+      if (!result) {
+        currentPlayerRecord = null;
+        emptyArea.style.display = 'block';
+        resultArea.classList.remove('active');
+        recordsApp.classList.remove('record-view');
+        alert("Cidadão não encontrado no banco de dados.");
+        return;
+      }
+
+      currentPlayerRecord = result;
+      emptyArea.style.display = 'none';
+      resultArea.classList.add('active');
+      recordsApp.classList.add('record-view');
+
+      document.getElementById('profileName').innerText = result.name;
+      document.getElementById('profileId').innerText = result.playerId;
+
+      const gunLicenseEl = document.getElementById('profileGunLicense');
+      gunLicenseEl.innerText = result.hasGunLicense ? "VÁLIDO" : "NÃO POSSUI / CASSAÇÃO";
+      gunLicenseEl.style.color = result.hasGunLicense ? "#4ade80" : "#f87171";
+
+      const statusTag = document.getElementById('profileStatusTag');
+      if (result.isWanted) {
+        statusTag.innerHTML = `<span class="tag tag-wanted"><i class="fa-solid fa-triangle-exclamation"></i> Mandado de Prisão Ativo</span>`;
+      } else {
+        statusTag.innerHTML = `<span class="tag tag-clean"><i class="fa-solid fa-check"></i> Nada Consta</span>`;
+      }
+
+      const arrestsUl = document.getElementById('arrestsList');
+      arrestsUl.innerHTML = '';
+      renderOccurrencePreview(result.arrests || []);
+
+      const finesUl = document.getElementById('finesList');
+      finesUl.innerHTML = '';
+      if (result.fines.length > 0) {
+        result.fines.forEach(f => {
+          finesUl.innerHTML += `<li><span>${f.reason}</span> <strong style="color:#f87171">$${f.amount.toLocaleString('pt-BR')}</strong></li>`;
+        });
+      } else {
+        finesUl.innerHTML = '<li style="color:#64748b;">Nenhuma multa pendente.</li>';
+      }
+    }
+
+    function getOccurrenceState(occurrence) {
+      const rawStatus = String(occurrence.status || occurrence.time || 'aberto').trim().toLowerCase();
+      const isClosed = rawStatus.includes('fech') || rawStatus.includes('closed');
+      return {
+        key: isClosed ? 'closed' : 'open',
+        label: isClosed ? 'Fechado' : 'Aberto'
+      };
+    }
+
+    function renderOccurrenceItem(occurrence) {
+      const state = getOccurrenceState(occurrence);
+      const number = occurrence.id ? `#${String(occurrence.id).padStart(4, '0')}` : '';
+      const police = occurrence.police ? `<p>Policial: ${occurrence.police}</p>` : '';
+      return `
+        <li class="occurrence-item">
+          <div class="occurrence-row">
+            <strong>${number} ${occurrence.reason || 'Ocorrência registrada'}</strong>
+            <span class="occurrence-status ${state.key}">${state.label}</span>
+          </div>
+          ${police}
+        </li>
+      `;
+    }
+
+    function renderOccurrencePreviewItem(occurrence) {
+      const state = getOccurrenceState(occurrence);
+      return `
+        <li>
+          <div class="occurrence-row">
+            <span>${occurrence.reason || 'Ocorrência registrada'}</span>
+            <span class="occurrence-status ${state.key}">${state.label}</span>
+          </div>
+        </li>
+      `;
+    }
+
+    function renderOccurrencePreview(occurrences) {
+      const arrestsUl = document.getElementById('arrestsList');
+      if (!occurrences.length) {
+        arrestsUl.innerHTML = '<li style="color:#64748b;">Nenhuma ocorrência registrada.</li>';
+        return;
+      }
+
+      arrestsUl.innerHTML = occurrences.slice(0, 3).map(renderOccurrencePreviewItem).join('');
+      if (occurrences.length > 3) {
+        arrestsUl.innerHTML += '<li style="color:#60a5fa;">Toque para ver todas as ocorrências.</li>';
+      }
+    }
+
+    function openOccurrences() {
+      if (!currentPlayerRecord) return;
+
+      document.querySelectorAll('.app-window').forEach(app => app.classList.remove('open'));
+      document.getElementById('occurrencesApp').classList.add('open');
+      document.getElementById('occurrencesProfileName').innerText = currentPlayerRecord.name || '';
+      currentOccurrenceFilter = 'all';
+      document.querySelectorAll('.occurrence-filter').forEach(button => button.classList.remove('active'));
+      document.querySelector('.occurrence-filter[data-filter="all"]').classList.add('active');
+      renderAllOccurrences();
+    }
+
+    function filterOccurrences(filter, button) {
+      currentOccurrenceFilter = filter;
+      document.querySelectorAll('.occurrence-filter').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      renderAllOccurrences();
+    }
+
+    function renderAllOccurrences() {
+      const list = document.getElementById('allOccurrencesList');
+      const occurrences = (currentPlayerRecord && currentPlayerRecord.arrests) || [];
+      const filtered = occurrences.filter(occurrence => {
+        return currentOccurrenceFilter === 'all' || getOccurrenceState(occurrence).key === currentOccurrenceFilter;
+      });
+
+      list.innerHTML = filtered.length
+        ? filtered.map(renderOccurrenceItem).join('')
+        : '<p style="color:#64748b;">Nenhuma ocorrência neste filtro.</p>';
+    }
+
+    function showRecordsSearch() {
+      const emptyArea = document.getElementById('emptySearchArea');
+      const resultArea = document.getElementById('searchResultArea');
+      const recordsApp = document.getElementById('recordsApp');
+
+      emptyArea.style.display = 'block';
+      resultArea.classList.remove('active');
+      recordsApp.classList.remove('record-view');
+    }
+
+    function searchPlayer() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) {
+        displayPlayerRecord(null);
+        return;
+      }
+
+      sendCommand(`tbc ficha ${query}`);
+    }
+
+    function openModal(type) {
+      if (type === 'addOfficer' && !hasAccess('admin')) return;
+      if (type === 'addRank' && !currentUserIsLeader) return;
+
+      if (type === 'addOfficer') {
+        document.getElementById('modalOfficerTitle').innerText = "RECRUTAR OFICIAL";
+        document.getElementById('editOfficerId').value = "";
+        document.getElementById('officerPlayerId').value = "";
+        document.getElementById('groupOfficerPlayerId').style.display = "flex";
+        document.getElementById('modalOfficer').classList.add('active');
+      } else if (type === 'addRank') {
+        document.getElementById('modalRankTitle').innerText = "NOVA PATENTE";
+        document.getElementById('editRankId').value = "";
+        document.getElementById('rankName').value = "";
+        document.getElementById('rankType').value = "normal";
+        document.getElementById('modalRank').classList.add('active');
+      }
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    function saveRank() {
+      const id = document.getElementById('editRankId').value;
+      const name = document.getElementById('rankName').value.trim();
+      const type = normalizeRankType(document.getElementById('rankType').value);
+      if (!name) return alert("Digite o nome da patente!");
+      sendCommand(`tbc rank_save ${id || 0}|${name}|${type}`);
+      closeModal('modalRank');
+    }
+
+    function editRank(id) {
+      const rank = ranks.find(r => r.id === id);
+      if (!rank) return;
+      document.getElementById('modalRankTitle').innerText = "EDITAR PATENTE";
+      document.getElementById('editRankId').value = rank.id;
+      document.getElementById('rankName').value = rank.name;
+      document.getElementById('rankType').value = normalizeRankType(rank.type);
+      document.getElementById('modalRank').classList.add('active');
+    }
+
+    function deleteRank(id) {
+      if (confirm("Excluir esta patente?")) {
+        sendCommand(`tbc rank_delete ${id}`);
+      }
+    }
+
+    function saveOfficer() {
+      const id = document.getElementById('editOfficerId').value;
+      const playerId = document.getElementById('officerPlayerId').value;
+      const rankId = parseInt(document.getElementById('officerRankSelect').value);
+
+      if (id) {
+        const officer = officers.find(o => o.id == id);
+        if (!officer) return;
+        if (officer.playerId > 0) {
+          sendCommand(`tbc member_setrank ${officer.playerId} ${rankId}`);
+        } else {
+          sendCommand(`tbc member_slot_set ${officer.memberSlot} ${rankId}`);
+        }
+      } else {
+        if (!playerId) return alert("Informe o passaporte do oficial!");
+        sendCommand(`tbc member_add ${parseInt(playerId)} ${rankId}`);
+      }
+
+      closeModal('modalOfficer');
+    }
+
+    function editOfficer(id) {
+      const officer = officers.find(o => o.id === id);
+      if (!officer) return;
+      document.getElementById('modalOfficerTitle').innerText = "ALTERAR PATENTE";
+      document.getElementById('editOfficerId').value = officer.id;
+      document.getElementById('groupOfficerPlayerId').style.display = "none";
+      document.getElementById('officerRankSelect').value = officer.rankId;
+      document.getElementById('modalOfficer').classList.add('active');
+    }
+
+    function deleteOfficer(id) {
+      if (confirm("Exonerar oficial do departamento?")) {
+        const officer = officers.find(o => o.id === id);
+        if (!officer) return;
+        if (officer.playerId > 0) {
+          sendCommand(`tbc member_remove ${officer.playerId}`);
+        } else {
+          sendCommand(`tbc member_slot_remove ${officer.memberSlot}`);
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const defaultPlayer = playersDatabase[0];
+      const searchInput = document.getElementById('searchInput');
+
+      if (searchInput && defaultPlayer) {
+        searchInput.value = defaultPlayer.playerId;
+      }
+
+      renderRanks();
+      renderOfficers();
+    });
+  </script>
+</body>
+</html>

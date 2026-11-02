@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Refino de Laboratório 3D</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    body { width: 100vw; height: 100vh; overflow: hidden; background-color: #030305; font-family: 'Segoe UI', sans-serif; color: #fff; touch-action: none; }
+    #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+    
+    #start-screen {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(3, 3, 5, 0.75), rgba(3, 3, 5, 0.88)), 
+                  url('https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;
+      z-index: 100; display: flex; justify-content: center; align-items: center;
+      backdrop-filter: blur(5px); transition: opacity 0.5s ease, visibility 0.5s;
+    }
+    .start-card {
+      background: rgba(10, 10, 15, 0.92); border: 1px solid rgba(0, 179, 126, 0.4);
+      padding: 40px 30px; border-radius: 16px; text-align: center; max-width: 420px; width: 90%;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 179, 126, 0.2);
+      display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(12px);
+    }
+    .start-card h1 { font-size: 1.4rem; color: #00b37e; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+    .start-card p { font-size: 0.85rem; color: #a8a8b3; margin-bottom: 24px; line-height: 1.4; }
+    
+    #btn-start-game {
+      width: 100%; padding: 14px; background: #00b37e; border: none; border-radius: 8px;
+      color: #000; font-weight: bold; font-size: 0.95rem; cursor: pointer;
+      transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
+      box-shadow: 0 0 15px rgba(0, 179, 126, 0.3);
+    }
+    #btn-start-game:hover { background: #00d696; box-shadow: 0 0 25px rgba(0, 179, 126, 0.6); transform: translateY(-2px); }
+
+    #ui-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+      pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 20px;
+      opacity: 0; transition: opacity 0.5s ease;
+    }
+    .header { background: rgba(10, 10, 15, 0.85); border: 1px solid rgba(0, 179, 126, 0.3); padding: 12px 20px; border-radius: 8px; width: max-content; backdrop-filter: blur(10px); }
+    .header h1 { font-size: 1.1rem; color: #00b37e; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+    .header p { font-size: 0.75rem; color: #8a8a9a; }
+
+    .footer-panel {
+      background: rgba(10, 10, 15, 0.9); border: 1px solid rgba(255,255,255,0.1); padding: 18px 24px; border-radius: 12px;
+      width: 100%; max-width: 440px; align-self: center; pointer-events: auto; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+    }
+    #step-indicator { font-size: 0.7rem; color: #00b37e; letter-spacing: 1.5px; font-weight: bold; margin-bottom: 6px; }
+    #instruction-text { font-size: 0.95rem; color: #e1e1e6; font-weight: 500; margin-bottom: 12px; }
+    .progress-bar { width: 100%; height: 6px; background: #181820; border-radius: 3px; overflow: hidden; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.05); }
+    #progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #00b37e, #00ffb2); transition: width 0.15s ease-out; }
+    
+    #btn-action {
+      width: 100%; padding: 12px; background: #00b37e; border: none; border-radius: 6px;
+      color: #000; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    #btn-action:disabled { background: #202028; color: #505060; cursor: not-allowed; }
+    #btn-action:hover:not(:disabled) { background: #00d696; box-shadow: 0 0 15px rgba(0, 179, 126, 0.4); }
+
+    /* MODAL DE FINALIZAÇÃO */
+    #finish-modal {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(3, 3, 5, 0.85); z-index: 200; display: flex; justify-content: center; align-items: center;
+      backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+    }
+    #finish-modal.active { opacity: 1; pointer-events: auto; }
+    .finish-card {
+      background: rgba(10, 10, 15, 0.95); border: 1px solid rgba(0, 179, 126, 0.6);
+      padding: 35px 30px; border-radius: 16px; text-align: center; max-width: 400px; width: 90%;
+      box-shadow: 0 0 50px rgba(0, 179, 126, 0.25); display: flex; flex-direction: column; align-items: center;
+      transform: scale(0.9); transition: transform 0.4s ease;
+    }
+    #finish-modal.active .finish-card { transform: scale(1); }
+    .finish-icon { font-size: 3rem; margin-bottom: 10px; }
+    .finish-card h2 { font-size: 1.3rem; color: #00b37e; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+    .finish-card p { font-size: 0.85rem; color: #c5c5d0; margin-bottom: 24px; line-height: 1.4; }
+    #btn-close-modal {
+      width: 100%; padding: 12px; background: #00b37e; border: none; border-radius: 8px;
+      color: #000; font-weight: bold; font-size: 0.9rem; cursor: pointer; text-transform: uppercase;
+      transition: all 0.2s ease;
+    }
+    #btn-close-modal:hover { background: #00d696; box-shadow: 0 0 15px rgba(0, 179, 126, 0.5); }
+
+    #fade-screen { position: absolute; top:0; left:0; width:100%; height:100%; background:#000; z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+
+    #btn-exit-game {
+      position: absolute; top: 20px; right: 20px; z-index: 150;
+      padding: 12px 22px; border: 1px solid rgba(255, 90, 90, 0.75); border-radius: 8px;
+      background: rgba(120, 20, 30, 0.85); color: #fff; font-weight: bold;
+      font-size: 0.85rem; letter-spacing: 0.5px; cursor: pointer; text-transform: uppercase;
+      pointer-events: auto;
+    }
+    #btn-exit-game:active { background: rgba(170, 30, 40, 0.95); }
+  </style>
+
+  <script src="vendor/three.r128.min.js"></script>
+</head>
+<body>
+
+  <div id="start-screen">
+    <div class="start-card">
+      <h1>Laboratório Químico</h1>
+      <p>Configure os reagentes, realize a dosagem precisa e processe a amostragem final no forno de cristalização.</p>
+      <button id="btn-start-game" onclick="iniciarMinigame()">Iniciar Produção Química</button>
+    </div>
+  </div>
+
+  <button id="btn-exit-game" onclick="closeGame()">SAIR</button>
+
+  <div id="finish-modal">
+    <div class="finish-card">
+      <div class="finish-icon">🧪</div>
+      <h2>Refino Concluído!</h2>
+      <p>O processo de refino químico foi finalizado com sucesso. O produto purificado foi adicionado ao seu inventário.</p>
+      <button id="btn-close-modal" onclick="fecharModal()">Concluir</button>
+    </div>
+  </div>
+
+  <div id="fade-screen"></div>
+  <div id="canvas-container"></div>
+
+  <div id="ui-overlay">
+    <div class="header">
+      <h1>Refino de Laboratório</h1>
+      <p>Simulação Física 3D</p>
+    </div>
+
+    <div class="footer-panel">
+      <div id="step-indicator">ETAPA 1 DE 3: DOSAGEM</div>
+      <div id="instruction-text">🧪 Arraste o Frasco Erlenmeyer até o Becker graduado!</div>
+      <div class="progress-bar"><div id="progress-fill"></div></div>
+      <button id="btn-action" onclick="coletarProduto()" disabled>Coletar Produto Final</button>
+    </div>
+  </div>
+
+  <script>
+    let minigameIniciado = false;
+
+    function iniciarMinigame() {
+      const startScreen = document.getElementById('start-screen');
+      const uiOverlay = document.getElementById('ui-overlay');
+      
+      startScreen.style.opacity = '0';
+      setTimeout(() => {
+        startScreen.style.visibility = 'hidden';
+        uiOverlay.style.opacity = '1';
+        minigameIniciado = true;
+      }, 500);
+    }
+
+    const container = document.getElementById('canvas-container');
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a0d);
+
+    const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 1.9, 3.4);
+    camera.lookAt(0, 0.15, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    container.appendChild(renderer.domElement);
+
+    // ILUMINAÇÃO
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+    scene.add(ambientLight);
+    
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    mainLight.position.set(2, 6, 3);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
+
+    const softFill = new THREE.DirectionalLight(0x00b37e, 0.4);
+    softFill.position.set(-3, 3, -2);
+    scene.add(softFill);
+
+    // MESA DE INOX
+    const mesaGroup = new THREE.Group();
+    const tampoMesa = new THREE.Mesh(
+      new THREE.BoxGeometry(4, 0.08, 2),
+      new THREE.MeshStandardMaterial({ color: 0x22242b, roughness: 0.5, metalness: 0.4 })
+    );
+    tampoMesa.position.y = -0.04;
+    tampoMesa.receiveShadow = true;
+    mesaGroup.add(tampoMesa);
+    scene.add(mesaGroup);
+
+    // MATERIAIS
+    const matVidroVidro = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff, roughness: 0.1, metalness: 0.1, transmission: 0.9, ior: 1.4,
+      thickness: 0.04, transparent: true, opacity: 0.6
+    });
+
+    const matVidroForno = new THREE.MeshPhysicalMaterial({
+      color: 0xddf0ff, roughness: 0.02, transmission: 0.95, transparent: true, opacity: 0.35
+    });
+
+    const matVidroZiplock = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff, roughness: 0.2, transmission: 0.85, transparent: true, opacity: 0.7
+    });
+
+    const matLiquidoQuimico = new THREE.MeshStandardMaterial({
+      color: 0x00ff88, roughness: 0.3, metalness: 0.1,
+      emissive: 0x00441b, emissiveIntensity: 0.4
+    });
+
+    const matInoxClaro = new THREE.MeshStandardMaterial({ color: 0xb5b8c2, metalness: 0.75, roughness: 0.25 });
+    const matInoxInterior = new THREE.MeshStandardMaterial({ color: 0x666870, metalness: 0.8, roughness: 0.2 });
+    const matMetalCromado = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.9, roughness: 0.1 });
+    const matPoBranco = new THREE.MeshStandardMaterial({ color: 0xf0f0f5, roughness: 0.9, metalness: 0.0 });
+
+    function criarSetaCircular() {
+      const group = new THREE.Group();
+      const ringGeo = new THREE.RingGeometry(0.36, 0.39, 32);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffb2, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2;
+      group.add(ring);
+
+      for (let i = 0; i < 3; i++) {
+        const angle = (i * Math.PI * 2) / 3;
+        const arrowGeo = new THREE.ConeGeometry(0.03, 0.08, 3);
+        const arrowMat = new THREE.MeshBasicMaterial({ color: 0x00ffb2 });
+        const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+        
+        arrow.position.set(Math.cos(angle) * 0.375, 0, Math.sin(angle) * 0.375);
+        arrow.rotation.x = Math.PI / 2;
+        arrow.rotation.z = -angle;
+        group.add(arrow);
+      }
+      group.position.set(0.3, 0.01, 0);
+      group.visible = false;
+      return group;
+    }
+
+    const indicadorGiro = criarSetaCircular();
+    scene.add(indicadorGiro);
+
+    // JATO DE LÍQUIDO
+    const geoJato = new THREE.CylinderGeometry(0.008, 0.008, 0.22, 16);
+    geoJato.translate(0, -0.11, 0);
+    const jatoLiquido = new THREE.Mesh(geoJato, matLiquidoQuimico);
+    jatoLiquido.position.set(0.38, 0.36, 0);
+    jatoLiquido.visible = false;
+    scene.add(jatoLiquido);
+
+    // ERLENMEYER (GARGALO ALINHADO)
+    function criarErlenmeyerRealista() {
+      const grupo = new THREE.Group();
+
+      const points = [
+        new THREE.Vector2(0, 0), new THREE.Vector2(0.20, 0.01), new THREE.Vector2(0.20, 0.04),
+        new THREE.Vector2(0.06, 0.30), new THREE.Vector2(0.05, 0.42), new THREE.Vector2(0.055, 0.44),
+        new THREE.Vector2(0.042, 0.43), new THREE.Vector2(0.042, 0.03), new THREE.Vector2(0, 0.03)
+      ];
+      const frascoMesh = new THREE.Mesh(new THREE.LatheGeometry(points, 48), matVidroVidro);
+      frascoMesh.castShadow = true;
+
+      // Líquido Interno
+      const ptsLiquido = [
+        new THREE.Vector2(0, 0.02), new THREE.Vector2(0.18, 0.03),
+        new THREE.Vector2(0.11, 0.20), new THREE.Vector2(0, 0.20)
+      ];
+      const liquidoMesh = new THREE.Mesh(new THREE.LatheGeometry(ptsLiquido, 32), matLiquidoQuimico);
+
+      const modelo = new THREE.Group();
+      modelo.add(frascoMesh, liquidoMesh);
+
+      // Desloca modelo para pivô ficar no gargalo
+      modelo.position.set(0, -0.42, 0);
+      grupo.add(modelo);
+      grupo.position.y = 0.42;
+
+      grupo.userData = { liquido: liquidoMesh, modelo: modelo };
+      return grupo;
+    }
+
+    // BECKER
+    function criarBeckerRealista() {
+      const points = [
+        new THREE.Vector2(0, 0), new THREE.Vector2(0.16, 0.01), new THREE.Vector2(0.16, 0.35),
+        new THREE.Vector2(0.17, 0.37), new THREE.Vector2(0.15, 0.36), new THREE.Vector2(0.15, 0.02), new THREE.Vector2(0, 0.02)
+      ];
+      const beckerMesh = new THREE.Mesh(new THREE.LatheGeometry(points, 48), matVidroVidro);
+      beckerMesh.castShadow = true;
+
+      const geoLiq = new THREE.CylinderGeometry(0.148, 0.148, 0.20, 32);
+      const matLiqBase = matLiquidoQuimico.clone();
+      const liquidoMesh = new THREE.Mesh(geoLiq, matLiqBase);
+      liquidoMesh.position.y = 0.11;
+      liquidoMesh.scale.set(1, 0.01, 1);
+      liquidoMesh.visible = false;
+
+      const grupo = new THREE.Group();
+      grupo.add(beckerMesh, liquidoMesh);
+      grupo.userData = { liquido: liquidoMesh, matLiq: matLiqBase };
+      return grupo;
+    }
+
+    function criarBaciaRealista() {
+      const points = [
+        new THREE.Vector2(0, 0), new THREE.Vector2(0.32, 0.01), new THREE.Vector2(0.35, 0.20),
+        new THREE.Vector2(0.36, 0.21), new THREE.Vector2(0.33, 0.20), new THREE.Vector2(0.30, 0.02), new THREE.Vector2(0, 0.02)
+      ];
+      const baciaMesh = new THREE.Mesh(new THREE.LatheGeometry(points, 48), matVidroVidro);
+      baciaMesh.castShadow = true;
+
+      const geoLiq = new THREE.CylinderGeometry(0.31, 0.28, 0.10, 32);
+      const matLiqMistura = matLiquidoQuimico.clone();
+      const liquidoMesh = new THREE.Mesh(geoLiq, matLiqMistura);
+      liquidoMesh.position.y = 0.07;
+
+      const grupo = new THREE.Group();
+      grupo.add(baciaMesh, liquidoMesh);
+      grupo.userData = { matLiq: matLiqMistura };
+      return grupo;
+    }
+
+    function criarColherRealista() {
+      const grupo = new THREE.Group();
+
+      const cabo = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.45, 16), matMetalCromado);
+      cabo.position.y = 0.22;
+
+      const conchaGeo = new THREE.SphereGeometry(0.055, 16, 16);
+      conchaGeo.scale(1, 0.3, 1.5);
+      const concha = new THREE.Mesh(conchaGeo, matMetalCromado);
+      concha.position.set(0, 0, 0.03);
+
+      grupo.add(cabo, concha);
+      grupo.rotation.x = Math.PI / 12;
+      grupo.position.y = 0.15;
+      return grupo;
+    }
+
+    // FORNO COM PORTA ANIMADA
+    let ovenLightRef = null;
+    let portaPivot = null;
+
+    function criarFornoClaro() {
+      const grupo = new THREE.Group();
+
+      const t = 0.05;
+      const w = 1.1, h = 0.75, d = 0.7;
+
+      const topo = new THREE.Mesh(new THREE.BoxGeometry(w, t, d), matInoxClaro);
+      topo.position.set(0, h/2 - t/2, 0);
+
+      const base = new THREE.Mesh(new THREE.BoxGeometry(w, t, d), matInoxClaro);
+      base.position.set(0, -h/2 + t/2, 0);
+
+      const esq = new THREE.Mesh(new THREE.BoxGeometry(t, h - 2*t, d), matInoxClaro);
+      esq.position.set(-w/2 + t/2, 0, 0);
+
+      const dir = new THREE.Mesh(new THREE.BoxGeometry(t, h - 2*t, d), matInoxClaro);
+      dir.position.set(w/2 - t/2, 0, 0);
+
+      const fundo = new THREE.Mesh(new THREE.BoxGeometry(w - 2*t, h - 2*t, t), matInoxInterior);
+      fundo.position.set(0, 0, -d/2 + t/2);
+
+      const gabinete = new THREE.Group();
+      gabinete.add(topo, base, esq, dir, fundo);
+      gabinete.position.set(0, 0.42, -0.3);
+      grupo.add(gabinete);
+
+      // LUZ INTERNA
+      ovenLightRef = new THREE.PointLight(0xffaa33, 0, 2.0);
+      ovenLightRef.position.set(0, 0.45, -0.2);
+      grupo.add(ovenLightRef);
+
+      // Painel Superior
+      const painel = new THREE.Mesh(new THREE.BoxGeometry(w, 0.12, 0.03), matInoxClaro);
+      painel.position.set(0, 0.75, 0.05);
+
+      const display = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.22, 0.06),
+        new THREE.MeshBasicMaterial({ color: 0x00b37e })
+      );
+      display.position.set(0.3, 0.75, 0.067);
+
+      const bot1 = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.02, 16), matMetalCromado);
+      bot1.rotation.x = Math.PI / 2;
+      bot1.position.set(-0.3, 0.75, 0.067);
+
+      grupo.add(painel, display, bot1);
+
+      // --- PORTA ANIMADA (PIVOT NA BASE DA PORTA) ---
+      portaPivot = new THREE.Group();
+      portaPivot.position.set(0, 0.08, 0.05); // Ponto de dobradiça na parte inferior
+
+      const vidroPorta = new THREE.Mesh(new THREE.BoxGeometry(w - 0.1, h - 0.18, 0.015), matVidroForno);
+      vidroPorta.position.set(0, (h - 0.18) / 2, 0); // Desloca para subir a partir do pivô
+
+      const puxador = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.02, 0.04), matMetalCromado);
+      puxador.position.set(0, h - 0.22, 0.03);
+
+      portaPivot.add(vidroPorta, puxador);
+      grupo.add(portaPivot);
+
+      // Grade interna
+      const grade = new THREE.Mesh(new THREE.BoxGeometry(w - 0.12, 0.015, d - 0.1), matMetalCromado);
+      grade.position.set(0, 0.18, -0.3);
+      grupo.add(grade);
+
+      return grupo;
+    }
+
+    function criarBandejaRealista() {
+      const grupo = new THREE.Group();
+      const baseBandeja = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 0.36), matMetalCromado);
+      baseBandeja.castShadow = true;
+
+      const matAmostra = matLiquidoQuimico.clone();
+      const amostra = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.015, 0.30), matAmostra);
+      amostra.position.y = 0.015;
+
+      grupo.add(baseBandeja, amostra);
+      grupo.userData = { matAmostra: matAmostra, amostraMesh: amostra };
+      return grupo;
+    }
+
+    function criarZiplockRealista() {
+      const grupo = new THREE.Group();
+      const sacoPlastico = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.04, 0.45), matVidroZiplock);
+      sacoPlastico.position.y = 0.02;
+
+      const fecho = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.015, 0.02), new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 }));
+      fecho.position.set(0, 0.035, -0.20);
+
+      const poInterno = new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.028, 0.36), matPoBranco);
+      poInterno.position.set(0, 0.018, 0.02);
+      poInterno.visible = false;
+
+      grupo.add(sacoPlastico, fecho, poInterno);
+      grupo.userData = { po: poInterno };
+      return grupo;
+    }
+
+    // GRUPOS DAS ETAPAS
+    let etapaAtual = 1;
+    let noGiroManual = false;
+    let progressoMistura = 0;
+    let secagemConcluida = false;
+    let ziplockEmbalado = false;
+    let executandoAnimacaoForno = false;
+
+    const targetPos = new THREE.Vector3();
+    const currentPos = new THREE.Vector3();
+
+    const grupoEtapa1 = new THREE.Group();
+    const grupoEtapa2 = new THREE.Group();
+    const grupoEtapa3 = new THREE.Group();
+
+    scene.add(grupoEtapa1, grupoEtapa2, grupoEtapa3);
+    grupoEtapa2.visible = false;
+    grupoEtapa3.visible = false;
+
+    // Instâncias
+    const frascoGroup = criarErlenmeyerRealista();
+    frascoGroup.position.set(-0.55, 0.42, 0);
+    grupoEtapa1.add(frascoGroup);
+
+    const beckerObj = criarBeckerRealista();
+    beckerObj.position.set(0.55, 0, 0);
+    grupoEtapa1.add(beckerObj);
+
+    const baciaObj = criarBaciaRealista();
+    baciaObj.position.set(0.3, 0, 0);
+    grupoEtapa2.add(baciaObj);
+
+    const colherGroup = criarColherRealista();
+    colherGroup.position.set(-0.6, 0, 0);
+    grupoEtapa2.add(colherGroup);
+
+    const fornoGroup = criarFornoClaro();
+    grupoEtapa3.add(fornoGroup);
+
+    const bandejaGroup = criarBandejaRealista();
+    bandejaGroup.position.set(0, 0.02, 0.55);
+    grupoEtapa3.add(bandejaGroup);
+
+    const ziplockObj = criarZiplockRealista();
+    ziplockObj.position.set(-0.7, 0.02, 0.55);
+    ziplockObj.visible = false;
+    grupoEtapa3.add(ziplockObj);
+
+    // CONTROLE DE INTERAÇÃO
+    let isDragging = false;
+    let dragTarget = null;
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const intersectionPoint = new THREE.Vector3();
+
+    function updateMousePosition(e) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+      mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    }
+
+    function onStart(e) {
+      if (!minigameIniciado || executandoAnimacaoForno || e.target.closest('.footer-panel') || e.target.closest('#finish-modal')) return;
+
+      updateMousePosition(e);
+      raycaster.setFromCamera(mouse, camera);
+
+      let activeGroup = null;
+      if (etapaAtual === 1) activeGroup = frascoGroup;
+      else if (etapaAtual === 2) activeGroup = colherGroup;
+      else if (etapaAtual === 3) {
+        if (!secagemConcluida) activeGroup = bandejaGroup;
+        else if (!ziplockEmbalado) activeGroup = ziplockObj;
+      }
+
+      if (!activeGroup) return;
+
+      const intersects = raycaster.intersectObjects(activeGroup.children, true);
+
+      if (intersects.length > 0) {
+        isDragging = true;
+        dragTarget = activeGroup;
+        document.body.style.cursor = 'grabbing';
+
+        if (raycaster.ray.intersectPlane(dragPlane, intersectionPoint)) {
+          targetPos.copy(intersectionPoint);
+          currentPos.copy(dragTarget.position);
+        }
+      }
+    }
+
+    function onMove(e) {
+      if (!minigameIniciado || !isDragging || !dragTarget || executandoAnimacaoForno) return;
+
+      updateMousePosition(e);
+      raycaster.setFromCamera(mouse, camera);
+
+      if (raycaster.ray.intersectPlane(dragPlane, intersectionPoint)) {
+        if (etapaAtual === 2 && noGiroManual) {
+          const distanciaDaBacia = intersectionPoint.distanceTo(baciaObj.position);
+          
+          if (distanciaDaBacia < 0.28) {
+            targetPos.set(intersectionPoint.x, 0.10, intersectionPoint.z);
+
+            const movimento = intersectionPoint.distanceTo(currentPos);
+            progressoMistura += movimento * 7.5; 
+            const pct = Math.min(100, Math.max(0, progressoMistura));
+            document.getElementById('progress-fill').style.width = pct + "%";
+
+            if (progressoMistura >= 100) {
+              noGiroManual = false;
+              isDragging = false;
+              indicadorGiro.visible = false;
+              baciaObj.userData.matLiq.color.setHex(0xa3f7df);
+              document.getElementById('instruction-text').textContent = "✅ Mistura Homogênea!";
+              setTimeout(() => transitarParaEtapa(3), 800);
+            }
+          }
+        } else {
+          dragTarget.position.set(
+            Math.max(-1.2, Math.min(1.2, intersectionPoint.x)),
+            dragTarget.position.y,
+            Math.max(-0.8, Math.min(0.8, intersectionPoint.z))
+          );
+        }
+      }
+    }
+
+    function onEnd() {
+      if (!minigameIniciado || !isDragging || !dragTarget || executandoAnimacaoForno) return;
+
+      isDragging = false;
+      document.body.style.cursor = 'default';
+
+      if (etapaAtual === 1) {
+        if (frascoGroup.position.distanceTo(beckerObj.position) < 0.65) {
+          // APLICA INCLINAÇÃO CORRETA E ALINHA GARGALO NA BORDA
+          frascoGroup.position.set(0.38, 0.38, 0);
+          frascoGroup.rotation.z = -Math.PI / 2.3; // Tomba para a esquerda em direção ao Becker
+
+          jatoLiquido.visible = true;
+          beckerObj.userData.liquido.visible = true;
+
+          document.getElementById('instruction-text').textContent = "Despejando reagente...";
+          document.getElementById('progress-fill').style.width = "33%";
+
+          let prog = 0;
+          const interval = setInterval(() => {
+            prog += 0.05;
+            frascoGroup.userData.liquido.scale.y = Math.max(0.01, 1 - prog);
+            beckerObj.userData.liquido.scale.y = Math.min(1, prog);
+
+            if (prog >= 1) clearInterval(interval);
+          }, 60);
+
+          setTimeout(() => {
+            frascoGroup.userData.liquido.visible = false;
+            jatoLiquido.visible = false;
+
+            setTimeout(() => transitarParaEtapa(2), 800);
+          }, 1400);
+        } else {
+          frascoGroup.position.set(-0.55, 0.42, 0);
+          frascoGroup.rotation.z = 0;
+        }
+      }
+      else if (etapaAtual === 2 && !noGiroManual) {
+        if (colherGroup.position.distanceTo(baciaObj.position) < 0.45) {
+          noGiroManual = true;
+          targetPos.set(0.3, 0.10, 0);
+          indicadorGiro.visible = true;
+          document.getElementById('instruction-text').textContent = "🌀 Gire a colher em círculos na bacia até homogeneizar!";
+        } else {
+          targetPos.set(-0.6, 0.15, 0);
+        }
+      }
+      else if (etapaAtual === 3) {
+        if (!secagemConcluida) {
+          if (bandejaGroup.position.distanceTo(fornoGroup.position) < 0.65) {
+            executandoAnimacaoForno = true;
+            animarProcessoForno();
+          } else {
+            bandejaGroup.position.set(0, 0.02, 0.55);
+          }
+        } 
+        else if (!ziplockEmbalado) {
+          if (ziplockObj.position.distanceTo(bandejaGroup.position) < 0.35) {
+            ziplockObj.position.set(0, 0.03, 0.55);
+            ziplockObj.userData.po.visible = true;
+            bandejaGroup.userData.amostraMesh.visible = false;
+
+            ziplockEmbalado = true;
+            document.getElementById('instruction-text').textContent = "✅ Refino Concluído! Produto embalado com sucesso.";
+            document.getElementById('progress-fill').style.width = "100%";
+            document.getElementById('btn-action').disabled = false;
+          } else {
+            ziplockObj.position.set(-0.7, 0.02, 0.55);
+          }
+        }
+      }
+
+      dragTarget = null;
+    }
+
+    // ANIMAÇÃO DE ABRIR A PORTA, INSERIR BANDEJA E FECHAR
+    function animarProcessoForno() {
+      document.getElementById('instruction-text').textContent = "⚙️ Abrindo a porta do forno...";
+      
+      // 1. Abrir Porta (Rotacionar eixo X do pivô)
+      let tempo = 0;
+      const abrirInterval = setInterval(() => {
+        tempo += 0.05;
+        portaPivot.rotation.x = Math.min(Math.PI / 2.2, portaPivot.rotation.x + 0.08);
+
+        if (portaPivot.rotation.x >= Math.PI / 2.2) {
+          clearInterval(abrirInterval);
+          
+          // 2. Mover Bandeja para Dentro
+          document.getElementById('instruction-text').textContent = "📥 Inserindo bandeja na grade do forno...";
+          
+          let pBandeja = 0;
+          const posInicial = bandejaGroup.position.clone();
+          const posFinal = new THREE.Vector3(0, 0.18, -0.3);
+
+          const moverInterval = setInterval(() => {
+            pBandeja += 0.04;
+            bandejaGroup.position.lerpVectors(posInicial, posFinal, pBandeja);
+
+            if (pBandeja >= 1) {
+              clearInterval(moverInterval);
+
+              // 3. Fechar Porta
+              document.getElementById('instruction-text').textContent = "🔒 Fechando forno e iniciando aquecimento...";
+              
+              const fecharInterval = setInterval(() => {
+                portaPivot.rotation.x = Math.max(0, portaPivot.rotation.x - 0.08);
+
+                if (portaPivot.rotation.x <= 0) {
+                  clearInterval(fecharInterval);
+                  
+                  // 4. Iniciar Cristalização
+                  if (ovenLightRef) ovenLightRef.intensity = 3.5;
+                  document.getElementById('instruction-text').textContent = "🔥 Cristalizando reagentes sob alta temperatura...";
+                  document.getElementById('progress-fill').style.width = "80%";
+
+                  setTimeout(() => {
+                    bandejaGroup.userData.matAmostra.color.setHex(0xf0f0f5);
+                    
+                    // Reabre porta para retirar a bandeja
+                    const reabrirInterval = setInterval(() => {
+                      portaPivot.rotation.x = Math.min(Math.PI / 2.2, portaPivot.rotation.x + 0.08);
+                      
+                      if (portaPivot.rotation.x >= Math.PI / 2.2) {
+                        clearInterval(reabrirInterval);
+
+                        // Retira Bandeja
+                        bandejaGroup.position.set(0, 0.02, 0.55);
+                        if (ovenLightRef) ovenLightRef.intensity = 0;
+
+                        // Fecha porta novamente
+                        const fecharFinal = setInterval(() => {
+                          portaPivot.rotation.x = Math.max(0, portaPivot.rotation.x - 0.08);
+                          if (portaPivot.rotation.x <= 0) {
+                            clearInterval(fecharFinal);
+                            
+                            secagemConcluida = true;
+                            executandoAnimacaoForno = false;
+                            ziplockObj.visible = true;
+
+                            document.getElementById('instruction-text').textContent = "🛍️ Arraste o Ziplock até a Bandeja para embalar!";
+                            document.getElementById('progress-fill').style.width = "90%";
+                          }
+                        }, 30);
+                      }
+                    }, 30);
+                  }, 2500);
+                }
+              }, 30);
+            }
+          }, 30);
+        }
+      }, 30);
+    }
+
+    window.addEventListener('pointerdown', onStart);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onEnd);
+
+    function transitarParaEtapa(novaEtapa) {
+      const fadeScreen = document.getElementById('fade-screen');
+      fadeScreen.style.opacity = '1';
+
+      setTimeout(() => {
+        etapaAtual = novaEtapa;
+
+        grupoEtapa1.visible = (etapaAtual === 1);
+        grupoEtapa2.visible = (etapaAtual === 2);
+        grupoEtapa3.visible = (etapaAtual === 3);
+
+        if (etapaAtual === 2) {
+          document.getElementById('step-indicator').textContent = "ETAPA 2 DE 3: HOMOGENEIZAÇÃO";
+          document.getElementById('instruction-text').textContent = "🥣 Arraste a Colher para dentro da Bacia.";
+          progressoMistura = 0;
+          targetPos.copy(colherGroup.position);
+        } else if (etapaAtual === 3) {
+          document.getElementById('step-indicator').textContent = "ETAPA 3 DE 3: CRISTALIZAÇÃO";
+          document.getElementById('instruction-text').textContent = "🔥 Arraste a Bandeja para dentro do Forno.";
+        }
+
+        fadeScreen.style.opacity = '0';
+      }, 400);
+    }
+
+    function coletarProduto() {
+      document.getElementById('finish-modal').classList.add('active');
+
+      if (window.GetParentResourceName) {
+        fetch(`https://${GetParentResourceName()}/finalizarProcesso`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sucesso: true, quantidade: 10 })
+        });
+      }
+    }
+
+    function fecharModal() {
+      document.getElementById('finish-modal').classList.remove('active');
+      closeGame();
+    }
+
+    function closeGame() {
+      const elementsToHide = [
+        document.getElementById('start-screen'),
+        document.getElementById('finish-modal'),
+        document.getElementById('ui-overlay'),
+        document.getElementById('canvas-container'),
+        document.getElementById('btn-exit-game')
+      ];
+      elementsToHide.forEach((element) => {
+        if (element) element.style.display = 'none';
+      });
+      closeLocalOverlay();
+    }
+
+    function closeLocalOverlay() {
+      if (window.Android && typeof window.Android.close === 'function') {
+        window.Android.close();
+        return;
+      }
+      if (typeof window.__sampCloseLocalUi === 'function') {
+        window.__sampCloseLocalUi();
+        return;
+      }
+      try { window.close(); } catch (e) {}
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (etapaAtual === 2 && (isDragging || noGiroManual)) {
+        colherGroup.position.lerp(targetPos, 0.2);
+        currentPos.copy(colherGroup.position);
+      }
+
+      if (indicadorGiro.visible) {
+        indicadorGiro.rotation.y -= 0.03;
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updatePrecisionMatrix ? camera.updatePrecisionMatrix() : camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

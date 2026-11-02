@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interface de Seleção de Personagem e Spawn</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', 'Segoe UI', sans-serif;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: transparent !important;
+        }
+
+        /* CONTAINER BASE DAS ETAPAS */
+        .screen-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            z-index: 99;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: scale(0.98);
+        }
+
+        /* ========================================================= */
+        /*                     PRIMEIRA ETAPA                        */
+        /* ========================================================= */
+        #step-character {
+            justify-content: space-between;
+            padding: 60px 80px;
+            background: linear-gradient(180deg, rgba(5, 10, 20, 0.7) 0%, rgba(5, 10, 20, 0.4) 50%, rgba(5, 10, 20, 0.8) 100%),
+                        url('https://i.imgur.com/DYn31xT.jpg') no-repeat center center/cover;
+        }
+
+        .left-panel {
+            width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .panel-title {
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .slot-card {
+            background: rgba(12, 18, 28, 0.82);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            transition: all 0.25s ease;
+        }
+
+        .slot-card:hover, .slot-card.active {
+            border-color: #00d2ff;
+            background: rgba(0, 162, 255, 0.18);
+            box-shadow: 0 0 25px rgba(0, 162, 255, 0.35);
+            transform: translateX(6px);
+        }
+
+        .slot-avatar {
+            width: 62px;
+            height: 62px;
+            border-radius: 10px;
+            background: #151d2a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .slot-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gender-badge {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        .gender-male { background: #0088ff; }
+        .gender-female { background: #ff477e; }
+
+        .slot-info h4 { color: #fff; font-size: 15px; font-weight: 700; }
+        .slot-info p { color: #8c9ba5; font-size: 12px; margin-top: 2px; }
+
+        .slot-locked {
+            opacity: 0.75;
+            background: rgba(12, 18, 28, 0.6);
+            border-style: dashed;
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .slot-locked:hover {
+            transform: translateX(4px);
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .vip-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            color: #000;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-top: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+
+        .right-panel {
+            width: 330px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: rgba(12, 18, 28, 0.82);
+            border-left: 4px solid #00d2ff;
+            border-radius: 8px;
+            padding: 18px;
+            color: #fff;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #7b8e9f;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-value { font-size: 18px; font-weight: 700; color: #ffffff; }
+        .info-highlight { color: #00d2ff; }
+
+        .bottom-actions {
+            position: absolute;
+            bottom: 40px;
+            right: 80px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d2ff 0%, #0055ff 100%);
+            color: #fff;
+            border: none;
+            padding: 16px 38px;
+            font-size: 15px;
+            font-weight: 800;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 25px rgba(0, 162, 255, 0.45);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 162, 255, 0.7);
+            background: linear-gradient(135deg, #23dcff 0%, #1a66ff 100%);
+        }
+
+
+        /* ========================================================= */
+        /*               SEGUNDA ETAPA (SPAWN SELECTOR)              */
+        /* ========================================================= */
+        #step-spawn {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 80px;
+            background: linear-gradient(180deg, rgba(5, 10, 20, 0.75) 0%, rgba(5, 10, 20, 0.5) 50%, rgba(5, 10, 20, 0.85) 100%),
+                        url('https://i.imgur.com/DYn31xT.jpg') no-repeat center center/cover;
+        }
+
+        .spawn-header {
+            width: 100%;
+            max-width: 1150px;
+            border-left: 4px solid #00d2ff;
+            padding-left: 15px;
+            margin-bottom: 40px;
+        }
+
+        .spawn-header h2 {
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .spawn-header h2 span { color: #00d2ff; }
+
+        .spawn-header p {
+            color: #a0b2c6;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .spawn-cards-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1150px;
+            justify-content: center;
+        }
+
+        .spawn-card-item {
+            flex: 1;
+            height: 420px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            background: #0d1522;
+            cursor: pointer;
+        }
+
+        .spawn-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.5) contrast(1.1);
+            transition: transform 0.4s ease, filter 0.4s ease;
+            z-index: 1;
+        }
+
+        .spawn-bg-split {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            z-index: 1;
+            filter: brightness(0.5) contrast(1.1);
+            transition: transform 0.4s ease, filter 0.4s ease;
+        }
+
+        .spawn-bg-split .half-favela {
+            width: 50%;
+            height: 100%;
+            background: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=600&auto=format&fit=crop') center/cover;
+            border-right: 1px solid rgba(0, 210, 255, 0.4);
+        }
+
+        .spawn-bg-split .half-dp {
+            width: 50%;
+            height: 100%;
+            background: url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=600&auto=format&fit=crop') center/cover;
+        }
+
+        .spawn-bg-map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(13, 25, 42, 0.85) 0%, rgba(5, 10, 20, 0.95) 100%),
+                        url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=800&auto=format&fit=crop') center/cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .spawn-bg-map i {
+            font-size: 85px;
+            color: rgba(0, 210, 255, 0.25);
+            transition: all 0.4s ease;
+            filter: drop-shadow(0 0 15px rgba(0, 210, 255, 0.4));
+        }
+
+        .spawn-card-item:hover .spawn-bg, 
+        .spawn-card-item.selected .spawn-bg,
+        .spawn-card-item:hover .spawn-bg-split, 
+        .spawn-card-item.selected .spawn-bg-split {
+            transform: scale(1.05);
+            filter: brightness(0.7) contrast(1.1);
+        }
+
+        .spawn-card-item:hover .spawn-bg-map i,
+        .spawn-card-item.selected .spawn-bg-map i {
+            transform: scale(1.15);
+            color: rgba(0, 210, 255, 0.6);
+        }
+
+        .spawn-card-item.selected {
+            border-color: #00d2ff;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.5);
+            transform: translateY(-5px);
+        }
+
+        .spawn-content-top {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .spawn-icon-box {
+            background: #00d2ff;
+            width: 38px;
+            height: 38px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 16px;
+            box-shadow: 0 4px 10px rgba(0, 210, 255, 0.4);
+            flex-shrink: 0;
+        }
+
+        .spawn-title-text h3 {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+            line-height: 1.1;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .spawn-content-middle {
+            position: relative;
+            z-index: 2;
+            border-left: 3px solid #ffffff;
+            padding-left: 10px;
+            margin-top: auto;
+            margin-bottom: 25px;
+        }
+
+        .spawn-content-middle label {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .spawn-content-middle p {
+            color: #b0c0d0;
+            font-size: 11px;
+            margin-top: 3px;
+            line-height: 1.3;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+        }
+
+        .btn-select-spawn {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(5px);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .spawn-card-item:hover .btn-select-spawn, 
+        .spawn-card-item.selected .btn-select-spawn {
+            background: #00d2ff;
+            border-color: #00d2ff;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+        }
+
+        .btn-back-step {
+            position: absolute;
+            bottom: 40px;
+            left: 80px;
+            background: rgba(12, 18, 28, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-back-step:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ========================================================= */
+        /*   AVISO ANIMADO NO CENTRO INFERIOR (ENTRADA / SAÍDA)      */
+        /* ========================================================= */
+        .bottom-alert-box {
+            position: absolute;
+            bottom: 35px;
+            left: 50%;
+            z-index: 999;
+            background: rgba(15, 23, 38, 0.95);
+            border: 1.5px solid #ffd700;
+            border-radius: 10px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.25);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            
+            /* TRANSIÇÃO E ANIMAÇÃO */
+            transform: translate(-50%, 0);
+            opacity: 1;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+        }
+
+        .bottom-alert-box.alert-hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, 40px);
+        }
+
+        .alert-icon {
+            color: #ffd700;
+            font-size: 18px;
+        }
+
+        .alert-message {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .btn-close-alert {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .btn-close-alert:hover {
+            background: #ff4757;
+            border-color: #ff4757;
+            color: #fff;
+        }
+
+        /* ========================================================= */
+        /*                 AJUSTE RESPONSIVO MOBILE                  */
+        /* ========================================================= */
+        @media (max-width: 1100px), (max-height: 700px) {
+            #step-character {
+                padding: 24px 32px;
+            }
+
+            .left-panel {
+                width: min(32vw, 300px);
+                gap: 8px;
+                margin-top: 0;
+            }
+
+            .right-panel {
+                width: min(29vw, 280px);
+                gap: 8px;
+                margin-top: 0;
+            }
+
+            .panel-title {
+                font-size: 10px;
+                margin-bottom: 3px;
+                gap: 6px;
+            }
+
+            .slot-card {
+                border-width: 1px;
+                border-radius: 8px;
+                padding: 8px 10px;
+                gap: 9px;
+            }
+
+            .slot-avatar {
+                width: 42px;
+                height: 42px;
+                border-radius: 7px;
+            }
+
+            .slot-info h4 { font-size: 12px; }
+            .slot-info p { font-size: 9px; }
+            .vip-badge { font-size: 8px; padding: 2px 5px; margin-top: 2px; }
+            .gender-badge { width: 15px; height: 15px; font-size: 8px; bottom: 2px; right: 2px; }
+
+            .info-card {
+                border-left-width: 3px;
+                border-radius: 6px;
+                padding: 9px 10px;
+                gap: 3px;
+            }
+
+            .info-label { font-size: 8px; letter-spacing: .6px; gap: 4px; }
+            .info-value { font-size: 13px; }
+
+            .bottom-actions { bottom: 20px; right: 32px; }
+            .btn-primary { padding: 10px 20px; font-size: 11px; gap: 7px; border-radius: 6px; }
+
+            #step-spawn { padding: 20px 32px; }
+            .spawn-header { max-width: 100%; padding-left: 9px; margin-bottom: 16px; border-left-width: 3px; }
+            .spawn-header h2 { font-size: 18px; letter-spacing: 1px; }
+            .spawn-header p { font-size: 9px; margin-top: 2px; }
+            .spawn-cards-container { gap: 8px; max-width: 100%; }
+            .spawn-card-item { height: min(52vh, 300px); min-height: 210px; padding: 10px; border-radius: 8px; }
+            .spawn-content-top { gap: 7px; }
+            .spawn-icon-box { width: 28px; height: 28px; font-size: 12px; border-radius: 5px; }
+            .spawn-title-text h3 { font-size: 13px; letter-spacing: .6px; }
+            .spawn-content-middle { border-left-width: 2px; padding-left: 7px; margin-bottom: 10px; }
+            .spawn-content-middle label { font-size: 10px; }
+            .spawn-content-middle p { font-size: 9px; line-height: 1.15; }
+            .btn-select-spawn { padding: 8px 5px; font-size: 10px; letter-spacing: .5px; border-radius: 5px; }
+            .btn-back-step { bottom: 20px; left: 32px; padding: 9px 16px; font-size: 10px; gap: 6px; border-radius: 6px; }
+            .bottom-alert-box { bottom: 18px; padding: 8px 12px; gap: 8px; max-width: min(80vw, 380px); }
+            .alert-icon { font-size: 14px; }
+            .alert-message { font-size: 10px; }
+            .btn-close-alert { width: 22px; height: 22px; font-size: 10px; }
+        }
+
+        @media (max-width: 700px) {
+            #step-character { padding: 14px 16px; }
+            .left-panel { width: 38vw; }
+            .right-panel { width: 36vw; }
+            #step-spawn { padding: 14px 16px; }
+            .spawn-cards-container { gap: 5px; }
+            .spawn-card-item { padding: 7px; min-height: 180px; }
+            .spawn-title-text h3 { font-size: 10px; }
+            .spawn-content-middle p { font-size: 8px; }
+            .bottom-actions { right: 16px; bottom: 14px; }
+            .btn-back-step { left: 16px; bottom: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <script>window.GetParentResourceName = window.GetParentResourceName || function(){ return 'conexaorp'; };</script>
+
+    <!-- ========================================================= -->
+    <!--                     PRIMEIRA ETAPA                        -->
+    <!-- ========================================================= -->
+    <div id="step-character" class="screen-container">
+
+        <!-- LADO ESQUERDO: LISTA DE SLOTS -->
+        <div class="left-panel">
+            <div class="panel-title">
+                <i class="fa-solid fa-users"></i> Slots Disponíveis
+            </div>
+
+            <div class="slot-card active" onclick="selectSlot(this, 'Dev God', '24 Anos', 'Polícia Militar')">
+                <div class="slot-avatar">
+                    <img src="https://i.imgur.com/LEfhPil.png" alt="Personagem Masculino">
+                    <div class="gender-badge gender-male">
+                        <i class="fa-solid fa-mars"></i>
+                    </div>
+                </div>
+                <div class="slot-info">
+                    <h4>Dev God</h4>
+                    <p>Slot #1 • Normal Grátis</p>
+                </div>
+            </div>
+
+            <div class="slot-card slot-locked" onclick="openStore('Slot 2')">
+                <div class="slot-avatar">
+                    <i class="fa-solid fa-lock" style="font-size: 20px; color: #ffd700;"></i>
+                </div>
+                <div class="slot-info">
+                    <h4 style="color: #e2e8f0;">Novo Personagem</h4>
+                    <span class="vip-badge"><i class="fa-solid fa-gem"></i> Exclusivo VIP</span>
+                </div>
+            </div>
+
+            <div class="slot-card slot-locked" onclick="openStore('Slot 3')">
+                <div class="slot-avatar">
+                    <i class="fa-solid fa-lock" style="font-size: 20px; color: #ffd700;"></i>
+                </div>
+                <div class="slot-info">
+                    <h4 style="color: #e2e8f0;">Novo Personagem</h4>
+                    <span class="vip-badge"><i class="fa-solid fa-gem"></i> Exclusivo VIP</span>
+                </div>
+            </div>
+
+            <div class="slot-card slot-locked" onclick="openStore('Slot 4')">
+                <div class="slot-avatar">
+                    <i class="fa-solid fa-lock" style="font-size: 20px; color: #ffd700;"></i>
+                </div>
+                <div class="slot-info">
+                    <h4 style="color: #e2e8f0;">Novo Personagem</h4>
+                    <span class="vip-badge"><i class="fa-solid fa-gem"></i> Exclusivo VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- LADO DIREITO: INFORMAÇÕES DO PLAYER -->
+        <div class="right-panel">
+            <div class="panel-title">
+                <i class="fa-solid fa-id-card"></i> Ficha do Cidadão
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">
+                    <i class="fa-solid fa-user-tag"></i> Nome e Sobrenome
+                </div>
+                <div class="info-value" id="info-fullname">Dev God</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">
+                    <i class="fa-solid fa-cake-candles"></i> Idade
+                </div>
+                <div class="info-value" id="info-age">24 Anos</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">
+                    <i class="fa-solid fa-building-shield"></i> Organização / Corporação
+                </div>
+                <div class="info-value info-highlight" id="info-org">Polícia Militar</div>
+            </div>
+        </div>
+
+        <!-- AÇÃO DA PRÓXIMA ETAPA -->
+        <div class="bottom-actions">
+            <button class="btn-primary" onclick="goToStep(2)">
+                Prosseguir <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!--               SEGUNDA ETAPA (SELEÇÃO DE SPAWN)            -->
+    <!-- ========================================================= -->
+    <div id="step-spawn" class="screen-container hidden">
+
+        <div class="spawn-header">
+            <h2>SPAWN <span>SELECTOR</span></h2>
+            <p>Nesse menu, escolha o local que deseja nascer, caso queira você pode nascer na sua última posição.</p>
+        </div>
+
+        <!-- LISTA DE CARDS DE SPAWN -->
+        <div class="spawn-cards-container">
+
+            <!-- 1. Spawn Civil -->
+            <div class="spawn-card-item" onclick="selectSpawnCard(this)">
+                <div class="spawn-bg" style="background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=800&auto=format&fit=crop');"></div>
+                <div class="spawn-content-top">
+                    <div class="spawn-icon-box">
+                        <i class="fa-solid fa-plane-departure"></i>
+                    </div>
+                    <div class="spawn-title-text">
+                        <h3>SPAWN<br>CIVIL</h3>
+                    </div>
+                </div>
+                <div class="spawn-content-middle">
+                    <label>Informação</label>
+                    <p>Apareça no aeroporto da cidade para iniciar sua jornada civil.</p>
+                </div>
+                <button class="btn-select-spawn" onclick="confirmSpawn(event, 'civil')">Selecionar</button>
+            </div>
+
+            <!-- 2. Casa -->
+            <div class="spawn-card-item" onclick="selectSpawnCard(this)">
+                <div class="spawn-bg" style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop');"></div>
+                <div class="spawn-content-top">
+                    <div class="spawn-icon-box">
+                        <i class="fa-solid fa-house"></i>
+                    </div>
+                    <div class="spawn-title-text">
+                        <h3>SUA<br>CASA</h3>
+                    </div>
+                </div>
+                <div class="spawn-content-middle">
+                    <label>Informação</label>
+                    <p>Apareça diretamente na sua residência cadastrada.</p>
+                </div>
+                <button class="btn-select-spawn" onclick="confirmSpawn(event, 'casa')">Selecionar</button>
+            </div>
+
+            <!-- 3. Org / Corp -->
+            <div class="spawn-card-item" onclick="selectSpawnCard(this)">
+                <div class="spawn-bg-split">
+                    <div class="half-favela"></div>
+                    <div class="half-dp"></div>
+                </div>
+                <div class="spawn-content-top">
+                    <div class="spawn-icon-box">
+                        <i class="fa-solid fa-building-shield"></i>
+                    </div>
+                    <div class="spawn-title-text">
+                        <h3>ORG /<br>CORP</h3>
+                    </div>
+                </div>
+                <div class="spawn-content-middle">
+                    <label>Informação</label>
+                    <p>Apareça na sede da sua corporação ou facção.</p>
+                </div>
+                <button class="btn-select-spawn" onclick="confirmSpawn(event, 'org')">Selecionar</button>
+            </div>
+
+            <!-- 4. Última Posição -->
+            <div class="spawn-card-item" onclick="selectSpawnCard(this)">
+                <div class="spawn-bg-map">
+                    <i class="fa-solid fa-location-dot"></i>
+                </div>
+                <div class="spawn-content-top">
+                    <div class="spawn-icon-box">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div class="spawn-title-text">
+                        <h3>ÚLTIMA<br>POSIÇÃO</h3>
+                    </div>
+                </div>
+                <div class="spawn-content-middle">
+                    <label>Informação</label>
+                    <p>Volte para a última posição onde você esteve no mapa.</p>
+                </div>
+                <button class="btn-select-spawn" onclick="confirmSpawn(event, 'last_pos')">Selecionar</button>
+            </div>
+
+        </div>
+
+        <button class="btn-back-step" onclick="goToStep(1)">
+            <i class="fa-solid fa-arrow-left"></i> Voltar
+        </button>
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!--         ELEMENTO DE MENSAGEM NO CENTRO INFERIOR          -->
+    <!-- ========================================================= -->
+    <div id="html-alert-box" class="bottom-alert-box alert-hidden">
+        <div class="alert-icon">
+            <i class="fa-solid fa-circle-exclamation"></i>
+        </div>
+        <div class="alert-message" id="html-alert-text">
+            Este slot é bloqueado! Acesse a loja para adquirir um slot VIP.
+        </div>
+        <button class="btn-close-alert" onclick="closeHtmlAlert()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!--                     JAVASCRIPT GERAL                      -->
+    <!-- ========================================================= -->
+    <script>
+        let alertTimeout = null;
+
+        function goToStep(step) {
+            const step1 = document.getElementById('step-character');
+            const step2 = document.getElementById('step-spawn');
+
+            if (step === 2) {
+                step1.classList.add('hidden');
+                step2.classList.remove('hidden');
+            } else {
+                step2.classList.add('hidden');
+                step1.classList.remove('hidden');
+            }
+            closeHtmlAlert();
+        }
+
+        function selectSlot(element, fullname, age, org) {
+            document.querySelectorAll('.slot-card').forEach(card => card.classList.remove('active'));
+            element.classList.add('active');
+
+            document.getElementById('info-fullname').innerText = fullname;
+            document.getElementById('info-age').innerText = age;
+            document.getElementById('info-org').innerText = org;
+        }
+
+        function openStore(slotName) {
+            const alertBox = document.getElementById('html-alert-box');
+            const alertText = document.getElementById('html-alert-text');
+
+            if (alertTimeout) clearTimeout(alertTimeout);
+
+            alertText.innerHTML = `Este <b>${slotName}</b> é exclusivo VIP! Acesse a loja da cidade para desbloquear.`;
+            alertBox.classList.remove('alert-hidden');
+
+            alertTimeout = setTimeout(() => {
+                closeHtmlAlert();
+            }, 4000);
+        }
+
+        function closeHtmlAlert() {
+            const alertBox = document.getElementById('html-alert-box');
+            alertBox.classList.add('alert-hidden');
+            if (alertTimeout) {
+                clearTimeout(alertTimeout);
+                alertTimeout = null;
+            }
+        }
+
+        // APENAS APLICA A SELEÇÃO VISUAL AO CLICAR EM UM CARD DE SPAWN
+        function selectSpawnCard(cardElement) {
+            document.querySelectorAll('.spawn-card-item').forEach(card => card.classList.remove('selected'));
+            cardElement.classList.add('selected');
+        }
+
+        // DISPARA O AVISO E FECHA O HTML SOMENTE AO CLICAR NO BOTÃO SELECIONAR
+        function confirmSpawn(event, spawnType) {
+            event.stopPropagation(); // Impede o duplo clique no card pai
+
+            // Garante que o card correspondente fique marcado visualmente
+            const parentCard = event.currentTarget.closest('.spawn-card-item');
+            selectSpawnCard(parentCard);
+
+            // Exibe o aviso no centro inferior
+            const alertBox = document.getElementById('html-alert-box');
+            const alertText = document.getElementById('html-alert-text');
+            if (alertTimeout) clearTimeout(alertTimeout);
+            
+            alertText.innerHTML = `Spawn selecionado com sucesso! Entrando na cidade...`;
+            alertBox.classList.remove('alert-hidden');
+
+            // Aguarda exatamente 2 segundos (2000ms) para fechar o HTML e avisar o jogo
+            setTimeout(() => {
+                if (window.Android && Android.sendCommand) {
+                    Android.sendCommand('tela_spawn ' + spawnType);
+                }
+
+                // Oculta e encerra a interface
+                document.getElementById('step-spawn').classList.add('hidden');
+                document.getElementById('step-character').classList.add('hidden');
+                document.body.style.display = 'none';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

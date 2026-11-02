@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ESTUFA CNX - Cultivo 3D</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Rajdhani', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+      color: #fff;
+    }
+
+    .game-screen {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* TELA INICIAL (START SCREEN COM IMAGEM DE FUNDO) */
+    .start-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      /* Imagem de fundo via Unsplash + sobreposição escura para contraste */
+      background: linear-gradient(rgba(3, 7, 18, 0.75), rgba(3, 7, 18, 0.88)), 
+                  url('https://images.unsplash.com/photo-1536819114556-1e10f967fb61?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      gap: 20px;
+      padding: 20px;
+      text-align: center;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    .start-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .start-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #22c55e;
+      letter-spacing: 3px;
+      text-shadow: 0 0 20px rgba(34, 197, 94, 0.8), 0 0 40px rgba(0, 0, 0, 0.9);
+    }
+
+    .start-subtitle {
+      font-size: 1.1rem;
+      color: #e2e8f0;
+      max-width: 420px;
+      line-height: 1.4;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+    }
+
+    .btn-start {
+      background: #22c55e;
+      color: #052e16;
+      border: none;
+      padding: 14px 40px;
+      border-radius: 12px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      box-shadow: 0 0 25px rgba(34, 197, 94, 0.6);
+      transition: all 0.2s ease;
+    }
+
+    .btn-start:active {
+      transform: scale(0.95);
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+    }
+
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .hud-header {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.85);
+      width: 90%;
+      max-width: 500px;
+      background: rgba(10, 14, 18, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 12px 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(34, 197, 94, 0.5);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+
+    .hud-header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 900;
+      color: #22c55e;
+      letter-spacing: 2px;
+      text-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+    }
+
+    .hud-status {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.72rem;
+      color: #e2e8f0;
+      background: rgba(34, 197, 94, 0.15);
+      padding: 6px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(34, 197, 94, 0.6);
+    }
+
+    .btn-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(239, 68, 68, 0.25);
+      border: 1px solid #ef4444;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 30;
+      transition: all 0.2s ease;
+    }
+
+    .btn-close:active {
+      background: rgba(239, 68, 68, 0.6);
+    }
+
+    .progress-overlay {
+      position: absolute;
+      top: 22%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.7);
+      background: rgba(10, 14, 18, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(34, 197, 94, 0.6);
+      border-radius: 24px;
+      padding: 20px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 80px rgba(0, 0, 0, 0.95);
+    }
+
+    .progress-overlay.active {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(0.85);
+    }
+
+    .progress-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      color: #22c55e;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .progress-circle-svg {
+      width: 80px;
+      height: 80px;
+      transform: rotate(-90deg);
+    }
+
+    .progress-circle-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 8;
+    }
+
+    .progress-circle-bar {
+      fill: none;
+      stroke: #22c55e;
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 251;
+      stroke-dashoffset: 251;
+      transition: stroke-dashoffset 0.1s linear;
+    }
+
+    .progress-percent {
+      position: absolute;
+      top: 55%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .success-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: rgba(10, 14, 18, 0.95);
+      backdrop-filter: blur(16px);
+      border: 2px solid #22c55e;
+      border-radius: 20px;
+      padding: 30px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 0 60px rgba(34, 197, 94, 0.4);
+      width: 85%;
+      max-width: 380px;
+    }
+
+    .success-overlay.active {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .success-icon {
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    .success-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      color: #22c55e;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      text-align: center;
+      text-shadow: 0 0 15px rgba(34, 197, 94, 0.6);
+    }
+  </style>
+
+  <script src="vendor/three.r128.min.js"></script>
+</head>
+<body>
+
+  <div class="game-screen">
+    <!-- TELA INICIAL COM IMAGEM DE FUNDO -->
+    <div class="start-screen" id="startScreen">
+      <div class="start-title">ESTUFA CNX</div>
+      <div class="start-subtitle">Realize todas as etapas de cultivo, da preparação do solo até a embalagem final das flores.</div>
+      <button class="btn-start" onclick="startGame()">INICIAR CULTIVO</button>
+    </div>
+
+    <button class="btn-close" onclick="closeGame()">SAIR</button>
+
+    <div class="hud-header">
+      <h1>ESTUFA CNX</h1>
+      <div class="hud-status" id="hudInstruction">Arraste o SACO DE TERRA para o vaso</div>
+    </div>
+
+    <div class="progress-overlay" id="progressOverlay">
+      <div class="progress-title" id="progressTitle">Processando...</div>
+      <div style="position: relative;">
+        <svg class="progress-circle-svg">
+          <circle class="progress-circle-bg" cx="40" cy="40" r="36"></circle>
+          <circle class="progress-circle-bar" id="progressCircleBar" cx="40" cy="40" r="36"></circle>
+        </svg>
+        <div class="progress-percent" id="progressPercent">0%</div>
+      </div>
+    </div>
+
+    <div class="success-overlay" id="successOverlay">
+      <div class="success-icon">🌿</div>
+      <div class="success-title">Colheita CNX Concluída!</div>
+    </div>
+
+    <div id="canvas-container"></div>
+  </div>
+
+  <script>
+    let scene, camera, renderer;
+    let potGroup, potMesh, soilMesh, plantGroup, harvestedFlowersGroup, packedBagGroup;
+    let waterParticles, fertilizerParticles, soilParticles, seedParticles, leafCutParticles;
+    let activeEffect = null;
+    let items3D = {};
+    let activeHighlightRing = null;
+    let currentStep = 'soil';
+    let isProcessing = false;
+    let cuttingAnimationActive = false;
+    let cutTime = 0;
+
+    let raycaster, mouse;
+    let draggedItem = null;
+    let originalPositions = {};
+    let dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.2);
+    let planeIntersect = new THREE.Vector3();
+
+    const HARVEST_TARGET_POS = new THREE.Vector3(1.3, -0.4, 0.2);
+
+    const stepsOrder = ['soil', 'seed', 'water', 'fertilizer', 'pliers', 'bag'];
+    const stepTitles = {
+      soil: "Despejando Substrato...",
+      seed: "Plantando Sementes...",
+      water: "Regando Cultivo...",
+      fertilizer: "Nutrindo Solo...",
+      pliers: "Cortando Flores...",
+      bag: "Embalando Flores..."
+    };
+
+    const instructions = {
+      soil: "Arraste o SACO DE TERRA para o vaso",
+      seed: "Arraste as SEMENTES para o vaso",
+      water: "Arraste o REGADOR METÁLICO para o vaso",
+      fertilizer: "Arraste o NUTRIENTE para o vaso",
+      pliers: "Arraste a TESOURA para podar as flores",
+      bag: "Arraste o ZIPLOCK para as flores colhidas"
+    };
+
+    function startGame() {
+      document.getElementById('startScreen').classList.add('hidden');
+    }
+
+    function createLabelTexture(titleText, subtitleText, bgColor, textColor, accentColor) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = bgColor; ctx.fillRect(0, 0, 512, 512);
+      ctx.strokeStyle = accentColor; ctx.lineWidth = 16; ctx.strokeRect(20, 20, 472, 472);
+      ctx.fillStyle = accentColor; ctx.fillRect(20, 20, 472, 80);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(titleText.toUpperCase(), 256, 72);
+
+      ctx.fillStyle = textColor;
+      ctx.font = '900 52px sans-serif';
+      ctx.fillText(subtitleText, 256, 275);
+
+      ctx.fillStyle = accentColor; ctx.fillRect(60, 400, 392, 12);
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('• ESTUFA CNX •', 256, 445);
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function generateOrganicNoiseTexture(width, height, type) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      if (type === 'wood') {
+        ctx.fillStyle = '#1e130c'; ctx.fillRect(0, 0, width, height);
+        for (let i = 0; i < 400; i++) {
+          ctx.fillStyle = `rgba(${30 + Math.random()*20}, ${15 + Math.random()*15}, 10, ${0.1 + Math.random()*0.25})`;
+          ctx.fillRect(Math.random() * width, 0, Math.random() * 3 + 1, height);
+        }
+      } else if (type === 'soil') {
+        ctx.fillStyle = '#120a05'; ctx.fillRect(0, 0, width, height);
+        for (let i = 0; i < 4000; i++) {
+          const val = Math.floor(Math.random() * 90);
+          ctx.fillStyle = `rgb(${val + 20}, ${val + 10}, ${val})`;
+          ctx.fillRect(Math.random() * width, Math.random() * height, Math.random() * 3 + 1, Math.random() * 3 + 1);
+        }
+      }
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createCannabisLeafletGeo() {
+      const shape = new THREE.Shape();
+      shape.moveTo(0, 0);
+
+      shape.bezierCurveTo(0.02, 0.05, 0.04, 0.12, 0.05, 0.2);
+      shape.lineTo(0.035, 0.22); shape.lineTo(0.06, 0.3);
+      shape.lineTo(0.04, 0.33); shape.lineTo(0.065, 0.42);
+      shape.lineTo(0.04, 0.46); shape.lineTo(0.055, 0.55);
+      shape.bezierCurveTo(0.03, 0.65, 0.015, 0.75, 0, 0.85);
+
+      shape.bezierCurveTo(-0.015, 0.75, -0.03, 0.65, -0.055, 0.55);
+      shape.lineTo(-0.04, 0.46); shape.lineTo(-0.065, 0.42);
+      shape.lineTo(-0.04, 0.33); shape.lineTo(-0.06, 0.3);
+      shape.lineTo(-0.035, 0.22); shape.lineTo(-0.05, 0.2);
+      shape.bezierCurveTo(-0.04, 0.12, -0.02, 0.05, 0, 0);
+
+      const geom = new THREE.ShapeGeometry(shape, 8);
+      const pos = geom.attributes.position;
+
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i);
+        let y = pos.getY(i);
+        let z = -Math.abs(x) * 0.2 + Math.sin(y * 1.5) * 0.03;
+        pos.setXYZ(i, x, y, z);
+      }
+      geom.computeVertexNormals();
+      return geom;
+    }
+
+    function createPBRCannabisLeaf(leafMat) {
+      const group = new THREE.Group();
+      const leafletGeo = createCannabisLeafletGeo();
+      const scales = [0.4, 0.65, 0.85, 1.0, 0.85, 0.65, 0.4];
+      const angles = [-0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9];
+
+      for (let i = 0; i < 7; i++) {
+        const leaflet = new THREE.Mesh(leafletGeo, leafMat);
+        leaflet.scale.set(scales[i], scales[i], scales[i]);
+        leaflet.rotation.z = angles[i];
+        leaflet.rotation.x = 0.15;
+        leaflet.position.x = Math.sin(angles[i]) * 0.04;
+        leaflet.position.y = Math.cos(angles[i]) * 0.06;
+        leaflet.castShadow = true;
+        group.add(leaflet);
+      }
+
+      const petiole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.01, 0.015, 0.35, 8),
+        new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.6 })
+      );
+      petiole.position.y = -0.15;
+      group.add(petiole);
+
+      return group;
+    }
+
+    function createCannabisBud(leafMat) {
+      const budGroup = new THREE.Group();
+
+      const calyxMat = new THREE.MeshStandardMaterial({
+        color: 0x22542a,
+        roughness: 0.8,
+        metalness: 0.1
+      });
+
+      const calyxCount = 30;
+      for (let i = 0; i < calyxCount; i++) {
+        const calyxGeo = new THREE.ConeGeometry(0.05, 0.15, 5);
+        const calyx = new THREE.Mesh(calyxGeo, calyxMat);
+
+        const h = (i / calyxCount) * 0.55;
+        const radius = (1 - (h / 0.6) * 0.3) * 0.15;
+        const angle = i * 2.4;
+
+        calyx.position.set(Math.cos(angle) * radius, h, Math.sin(angle) * radius);
+        calyx.rotation.set(Math.random() * 0.4 + 0.2, angle, Math.random() * 0.3);
+        budGroup.add(calyx);
+      }
+
+      const pistilMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.5 });
+      for (let i = 0; i < 40; i++) {
+        const curve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3((Math.random() - 0.5) * 0.06, 0.06, (Math.random() - 0.5) * 0.06),
+          new THREE.Vector3((Math.random() - 0.5) * 0.12, 0.12 + Math.random() * 0.04, (Math.random() - 0.5) * 0.12)
+        ]);
+        const pGeo = new THREE.TubeGeometry(curve, 4, 0.003, 4, false);
+        const pistil = new THREE.Mesh(pGeo, pistilMat);
+
+        pistil.position.y = Math.random() * 0.5;
+        budGroup.add(pistil);
+      }
+
+      const leafletGeo = createCannabisLeafletGeo();
+      for (let i = 0; i < 8; i++) {
+        const sLeaf = new THREE.Mesh(leafletGeo, leafMat);
+        sLeaf.scale.set(0.18, 0.25, 0.18);
+        const a = (i / 8) * Math.PI * 2;
+        sLeaf.position.set(Math.cos(a) * 0.06, Math.random() * 0.4, Math.sin(a) * 0.06);
+        sLeaf.rotation.set(0.3, a, 0.2);
+        budGroup.add(sLeaf);
+      }
+
+      const trichomeGeo = new THREE.BufferGeometry();
+      const tCount = 80;
+      const tPos = new Float32Array(tCount * 3);
+      for (let i = 0; i < tCount * 3; i += 3) {
+        tPos[i] = (Math.random() - 0.5) * 0.28;
+        tPos[i + 1] = Math.random() * 0.55;
+        tPos[i + 2] = (Math.random() - 0.5) * 0.28;
+      }
+      trichomeGeo.setAttribute('position', new THREE.BufferAttribute(tPos, 3));
+      const trichomes = new THREE.Points(trichomeGeo, new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.018,
+        transparent: true,
+        opacity: 0.8
+      }));
+      budGroup.add(trichomes);
+
+      return budGroup;
+    }
+
+    function init3D() {
+      const container = document.getElementById('canvas-container');
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 11.5, 17.5);
+      camera.lookAt(0, -0.5, 0);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+
+      const mainLight = new THREE.SpotLight(0xfff7ed, 3.8);
+      mainLight.position.set(0, 12, 6);
+      mainLight.angle = Math.PI / 2.8;
+      mainLight.penumbra = 0.5;
+      mainLight.castShadow = true;
+      scene.add(mainLight);
+
+      const rimGreen = new THREE.PointLight(0x22c55e, 2.5, 15);
+      rimGreen.position.set(-6, 4, 1);
+      scene.add(rimGreen);
+
+      const woodTex = generateOrganicNoiseTexture(256, 256, 'wood');
+      woodTex.wrapS = THREE.RepeatWrapping; woodTex.wrapT = THREE.RepeatWrapping;
+      woodTex.repeat.set(4, 2);
+
+      const table = new THREE.Mesh(
+        new THREE.BoxGeometry(11.2, 0.4, 5.0),
+        new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.6 })
+      );
+      table.position.set(0, -0.7, 0);
+      table.receiveShadow = true;
+      scene.add(table);
+
+      potGroup = new THREE.Group();
+      const potShape = new THREE.Shape();
+      potShape.moveTo(0, 0); potShape.lineTo(0.7, 0);
+      potShape.lineTo(0.95, 1.3); potShape.lineTo(1.0, 1.45);
+      potShape.lineTo(0.85, 1.35); potShape.lineTo(0, 0.1);
+
+      potMesh = new THREE.Mesh(
+        new THREE.LatheGeometry(potShape.getPoints(), 32),
+        new THREE.MeshStandardMaterial({ color: 0x1e2220, roughness: 0.4 })
+      );
+      potMesh.castShadow = true;
+      potGroup.add(potMesh);
+
+      const soilTex = generateOrganicNoiseTexture(256, 256, 'soil');
+      soilMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.88, 0.82, 0.18, 32),
+        new THREE.MeshStandardMaterial({ map: soilTex, roughness: 0.95 })
+      );
+      soilMesh.position.set(0, 1.25, 0);
+      soilMesh.scale.set(0, 0, 0);
+      potGroup.add(soilMesh);
+
+      plantGroup = new THREE.Group();
+      plantGroup.position.set(0, 1.3, 0);
+
+      const leafMat = new THREE.MeshStandardMaterial({
+        color: 0x15803d,
+        roughness: 0.3,
+        metalness: 0.05,
+        side: THREE.DoubleSide
+      });
+      const stemMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.6 });
+
+      const mainStem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.07, 2.2, 12), stemMat);
+      mainStem.position.y = 1.1;
+      mainStem.castShadow = true;
+      plantGroup.add(mainStem);
+
+      for (let level = 0; level < 5; level++) {
+        const levelGroup = new THREE.Group();
+        levelGroup.position.y = 0.35 + (level * 0.38);
+        levelGroup.rotation.y = level * (Math.PI / 2.2);
+
+        for (let side = 0; side < 2; side++) {
+          const leaf = createPBRCannabisLeaf(leafMat);
+          leaf.scale.setScalar(0.7 + level * 0.08);
+          leaf.rotation.x = 0.3;
+          leaf.rotation.y = side * Math.PI;
+          leaf.position.set(Math.sin(side * Math.PI) * 0.1, 0, Math.cos(side * Math.PI) * 0.1);
+          levelGroup.add(leaf);
+
+          if (level >= 1) {
+            const bud = createCannabisBud(leafMat);
+            bud.scale.setScalar(0.55 + level * 0.12);
+            bud.position.set(Math.sin(side * Math.PI) * 0.18, 0.08, Math.cos(side * Math.PI) * 0.18);
+            levelGroup.add(bud);
+          }
+        }
+        plantGroup.add(levelGroup);
+      }
+
+      const topCola = createCannabisBud(leafMat);
+      topCola.scale.setScalar(1.35);
+      topCola.position.set(0, 2.1, 0);
+      plantGroup.add(topCola);
+
+      plantGroup.scale.set(0, 0, 0);
+      potGroup.add(plantGroup);
+      scene.add(potGroup);
+
+      soilParticles = createParticleSystem(0x3d2314, 0.11, 120);
+      seedParticles = createParticleSystem(0xeab308, 0.08, 60);
+      waterParticles = createParticleSystem(0x38bdf8, 0.09, 90);
+      fertilizerParticles = createParticleSystem(0xc084fc, 0.1, 90);
+      leafCutParticles = createParticleSystem(0x22c55e, 0.06, 40);
+
+      harvestedFlowersGroup = new THREE.Group();
+      for (let i = 0; i < 3; i++) {
+        const bud = createCannabisBud(leafMat);
+        bud.scale.setScalar(0.85);
+        bud.position.set((i - 1) * 0.28, 0.1, (i - 1) * 0.1);
+        harvestedFlowersGroup.add(bud);
+      }
+      harvestedFlowersGroup.position.copy(HARVEST_TARGET_POS);
+      harvestedFlowersGroup.visible = false;
+      scene.add(harvestedFlowersGroup);
+
+      packedBagGroup = new THREE.Group();
+      const plasticMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, roughness: 0.1 });
+      const packedBagMesh = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.6, 0.25), plasticMat);
+      packedBagGroup.add(packedBagMesh);
+
+      const sealMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(1.35, 0.12, 0.28),
+        new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.3 })
+      );
+      sealMesh.position.y = 0.75;
+      packedBagGroup.add(sealMesh);
+
+      const innerPlantGroup = new THREE.Group();
+      for (let i = 0; i < 3; i++) {
+        const bud = createCannabisBud(leafMat);
+        bud.scale.setScalar(0.65);
+        bud.position.set((i - 1) * 0.22, (i - 1) * 0.1 - 0.1, 0);
+        innerPlantGroup.add(bud);
+      }
+      packedBagGroup.add(innerPlantGroup);
+      packedBagGroup.position.set(0, -0.2, 0);
+      packedBagGroup.rotation.x = -Math.PI / 3.5;
+      packedBagGroup.visible = false;
+      scene.add(packedBagGroup);
+
+      items3D.soil       = createPBRSoilBag(new THREE.Vector3(-4.1, 0.1, -0.2));
+      items3D.seed       = createPBRSeedPack(new THREE.Vector3(-2.4, -0.4, 1.2));
+      items3D.water      = createPBRWateringCan(new THREE.Vector3(-1.6, 0.05, -1.1));
+      items3D.fertilizer = createPBRFertilizer(new THREE.Vector3(1.6, 0.02, -1.1));
+      items3D.pliers     = createPBRPliers(new THREE.Vector3(2.5, -0.4, 1.2));
+      items3D.bag        = createPBRZiplock(new THREE.Vector3(4.1, 0.0, -0.2));
+
+      for (let key in items3D) {
+        originalPositions[key] = items3D[key].position.clone();
+      }
+
+      createHighlightRing();
+
+      const canvas = renderer.domElement;
+      canvas.addEventListener('pointerdown', handleInputStart);
+      canvas.addEventListener('pointermove', handleInputMove);
+      canvas.addEventListener('pointerup', handleInputEnd);
+      canvas.addEventListener('touchstart', handleInputStart, {passive: false});
+      canvas.addEventListener('touchmove', handleInputMove, {passive: false});
+      canvas.addEventListener('touchend', handleInputEnd, {passive: false});
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        potGroup.rotation.y += 0.002;
+        if (packedBagGroup.visible) packedBagGroup.rotation.y += 0.005;
+
+        if (cuttingAnimationActive && items3D.pliers) {
+          cutTime += 0.12;
+          const pliers = items3D.pliers;
+          const handleLeft = pliers.userData.handleLeft;
+          const handleRight = pliers.userData.handleRight;
+
+          const angle = Math.abs(Math.sin(cutTime * 2)) * 0.35;
+          if (handleLeft && handleRight) {
+            handleLeft.rotation.z = 0.1 + angle;
+            handleRight.rotation.z = -0.1 - angle;
+          }
+
+          if (leafCutParticles.visible) {
+            const pos = leafCutParticles.geometry.attributes.position.array;
+            for (let i = 1; i < pos.length; i += 3) {
+              pos[i] -= 0.04;
+              if (pos[i] < 1.3) pos[i] = 2.2 + Math.random() * 0.3;
+            }
+            leafCutParticles.geometry.attributes.position.needsUpdate = true;
+          }
+        }
+
+        updateParticles(activeEffect);
+
+        if (activeHighlightRing && items3D[currentStep]) {
+          if (currentStep === 'bag') {
+            activeHighlightRing.position.x = HARVEST_TARGET_POS.x;
+            activeHighlightRing.position.z = HARVEST_TARGET_POS.z;
+          } else {
+            activeHighlightRing.position.x = items3D[currentStep].position.x;
+            activeHighlightRing.position.z = items3D[currentStep].position.z;
+          }
+          activeHighlightRing.rotation.z += 0.03;
+        }
+
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+
+    function createParticleSystem(colorHex, size, count) {
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      for(let i=0; i<count*3; i+=3) {
+        pos[i] = (Math.random() - 0.5) * 0.35;
+        pos[i+1] = 2.1 + Math.random() * 0.5;
+        pos[i+2] = (Math.random() - 0.5) * 0.35;
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const particles = new THREE.Points(geo, new THREE.PointsMaterial({
+        color: colorHex, size: size, transparent: true, opacity: 0.9
+      }));
+      particles.visible = false;
+      scene.add(particles);
+      return particles;
+    }
+
+    function updateParticles(type) {
+      let pSystem = null;
+      if (type === 'soil') pSystem = soilParticles;
+      else if (type === 'seed') pSystem = seedParticles;
+      else if (type === 'water') pSystem = waterParticles;
+      else if (type === 'fertilizer') pSystem = fertilizerParticles;
+
+      if (pSystem && pSystem.visible) {
+        const positions = pSystem.geometry.attributes.position.array;
+        for (let i = 1; i < positions.length; i += 3) {
+          positions[i] -= 0.07;
+          if (positions[i] < 1.25) {
+            positions[i] = 2.1 + Math.random() * 0.4;
+            positions[i-1] = (Math.random() - 0.5) * 0.35;
+          }
+        }
+        pSystem.geometry.attributes.position.needsUpdate = true;
+      }
+    }
+
+    function createPBRSoilBag(pos) {
+      const group = new THREE.Group();
+      const soilLabelTex = createLabelTexture('TERRA', 'SUBSTRATO', '#2d1810', '#f97316', '#ea580c');
+      const sideMat = new THREE.MeshStandardMaterial({ color: 0x261810, roughness: 0.8 });
+      const labelMat = new THREE.MeshStandardMaterial({ map: soilLabelTex, roughness: 0.4 });
+      const materials = [sideMat, sideMat, sideMat, sideMat, labelMat, sideMat];
+
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.1, 0.4), materials);
+      mesh.castShadow = true;
+      group.add(mesh);
+      group.position.copy(pos);
+      group.userData = { type: 'soil' };
+      scene.add(group);
+      return group;
+    }
+
+    function createPBRSeedPack(pos) {
+      const group = new THREE.Group();
+      const seedLabelTex = createLabelTexture('CNX', 'SEMENTES', '#14532d', '#facc15', '#22c55e');
+      const sideMat = new THREE.MeshStandardMaterial({ color: 0xca8a04, metalness: 0.8, roughness: 0.2 });
+      const labelMat = new THREE.MeshStandardMaterial({ map: seedLabelTex, roughness: 0.3 });
+      const materials = [sideMat, sideMat, sideMat, sideMat, labelMat, sideMat];
+
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.6, 0.04), materials);
+      mesh.castShadow = true;
+      group.add(mesh);
+      group.position.copy(pos);
+      group.rotation.x = -Math.PI / 3.2;
+      group.userData = { type: 'seed' };
+      scene.add(group);
+      return group;
+    }
+
+    function createPBRWateringCan(pos) {
+      const group = new THREE.Group();
+      const metalMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.85, roughness: 0.25 });
+
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.38, 0.65, 16), metalMat);
+      body.castShadow = true;
+      group.add(body);
+
+      const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.7, 12), metalMat);
+      spout.position.set(0.35, 0.15, 0);
+      spout.rotation.z = -Math.PI / 3.5;
+      group.add(spout);
+
+      group.position.copy(pos);
+      group.userData = { type: 'water' };
+      scene.add(group);
+      return group;
+    }
+
+    function createPBRFertilizer(pos) {
+      const group = new THREE.Group();
+      const fertMat = new THREE.MeshStandardMaterial({ color: 0x3b0764, roughness: 0.3 });
+      const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.26, 0.75, 16), fertMat);
+      group.add(bottle);
+
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.12, 16), new THREE.MeshStandardMaterial({ color: 0xa855f7 }));
+      cap.position.y = 0.42;
+      group.add(cap);
+
+      const fertLabelTex = createLabelTexture('CNX', 'NUTRIENTE', '#581c87', '#c084fc', '#a855f7');
+      const labelPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.48), new THREE.MeshStandardMaterial({ map: fertLabelTex, side: THREE.DoubleSide }));
+      labelPlane.position.set(0, 0, 0.25);
+      group.add(labelPlane);
+
+      group.position.copy(pos);
+      group.userData = { type: 'fertilizer' };
+      scene.add(group);
+      return group;
+    }
+
+    function createPBRPliers(pos) {
+      const group = new THREE.Group();
+      const metalMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.95, roughness: 0.15 });
+      const handleMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.4 });
+
+      const handleLeft = new THREE.Group();
+      const blade1 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.02), metalMat);
+      blade1.position.y = 0.2;
+      const h1 = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.55, 12), handleMat);
+      h1.position.set(-0.06, -0.25, 0);
+      handleLeft.add(blade1); handleLeft.add(h1);
+
+      const handleRight = new THREE.Group();
+      const blade2 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.02), metalMat);
+      blade2.position.y = 0.2;
+      const h2 = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.55, 12), handleMat);
+      h2.position.set(0.06, -0.25, 0);
+      handleRight.add(blade2); handleRight.add(h2);
+
+      const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.05, 12), metalMat);
+      screw.rotation.x = Math.PI / 2;
+
+      group.add(handleLeft);
+      group.add(handleRight);
+      group.add(screw);
+
+      group.userData = { type: 'pliers', handleLeft: handleLeft, handleRight: handleRight };
+      group.position.copy(pos);
+      group.rotation.x = -Math.PI / 2.8;
+      scene.add(group);
+      return group;
+    }
+
+    function createPBRZiplock(pos) {
+      const group = new THREE.Group();
+      const plasticMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, roughness: 0.1 });
+      const bag = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.7, 0.02), plasticMat);
+      group.add(bag);
+      group.position.copy(pos);
+      group.rotation.x = -Math.PI / 3;
+      group.userData = { type: 'bag' };
+      scene.add(group);
+      return group;
+    }
+
+    function createHighlightRing() {
+      const ringGeo = new THREE.RingGeometry(0.55, 0.65, 24);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x22c55e, side: THREE.DoubleSide });
+      activeHighlightRing = new THREE.Mesh(ringGeo, ringMat);
+      activeHighlightRing.rotation.x = Math.PI / 2;
+      activeHighlightRing.position.y = -0.48;
+      scene.add(activeHighlightRing);
+    }
+
+    function getEventClientCoords(e) {
+      if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      return { x: e.clientX, y: e.clientY };
+    }
+
+    function handleInputStart(e) {
+      if (isProcessing || !document.getElementById('startScreen').classList.contains('hidden')) return;
+      const coords = getEventClientCoords(e);
+      mouse.x = (coords.x / window.innerWidth) * 2 - 1;
+      mouse.y = -(coords.y / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      const checkObjects = [];
+      for(let key in items3D) {
+        items3D[key].traverse(child => { if (child.isMesh) checkObjects.push(child); });
+      }
+
+      const intersects = raycaster.intersectObjects(checkObjects);
+      if (intersects.length > 0) {
+        let parentGroup = intersects[0].object.parent;
+        while (parentGroup && !parentGroup.userData.type) { parentGroup = parentGroup.parent; }
+        if (parentGroup && parentGroup.userData.type === currentStep) {
+          draggedItem = parentGroup;
+        }
+      }
+    }
+
+    function handleInputMove(e) {
+      if (!draggedItem || isProcessing) return;
+      const coords = getEventClientCoords(e);
+      mouse.x = (coords.x / window.innerWidth) * 2 - 1;
+      mouse.y = -(coords.y / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      if (raycaster.ray.intersectPlane(dragPlane, planeIntersect)) {
+        draggedItem.position.x = planeIntersect.x;
+        draggedItem.position.z = planeIntersect.z;
+        draggedItem.position.y = 0.45;
+      }
+    }
+
+    function handleInputEnd() {
+      if (!draggedItem) return;
+
+      let targetPos = new THREE.Vector3(0, 0, 0);
+      if (draggedItem.userData.type === 'bag') targetPos.copy(HARVEST_TARGET_POS);
+
+      const dist = Math.sqrt(
+        Math.pow(draggedItem.position.x - targetPos.x, 2) + 
+        Math.pow(draggedItem.position.z - targetPos.z, 2)
+      );
+
+      if (dist < 1.6) {
+        startProgressBar(draggedItem.userData.type);
+      } else {
+        draggedItem.position.copy(originalPositions[draggedItem.userData.type]);
+      }
+      draggedItem = null;
+    }
+
+    function startProgressBar(type) {
+      isProcessing = true;
+      if (activeHighlightRing) activeHighlightRing.visible = false;
+
+      if (type === 'soil') {
+        activeEffect = 'soil';
+        items3D.soil.position.set(-0.6, 2.3, 0);
+        items3D.soil.rotation.set(0, 0, -Math.PI / 2.8);
+        soilParticles.visible = true;
+      } else if (type === 'seed') {
+        activeEffect = 'seed';
+        items3D.seed.position.set(-0.5, 2.1, 0);
+        items3D.seed.rotation.set(0, 0, -Math.PI / 2.5);
+        seedParticles.visible = true;
+      } else if (type === 'water') {
+        activeEffect = 'water';
+        items3D.water.position.set(-0.7, 2.3, 0);
+        items3D.water.rotation.set(0, 0, -Math.PI / 3.8);
+        waterParticles.visible = true;
+      } else if (type === 'fertilizer') {
+        activeEffect = 'fertilizer';
+        items3D.fertilizer.position.set(0.65, 2.2, 0);
+        items3D.fertilizer.rotation.set(0, 0, Math.PI / 3.2);
+        fertilizerParticles.visible = true;
+      } else if (type === 'pliers') {
+        items3D.pliers.position.set(0.3, 2.3, 0.2);
+        items3D.pliers.rotation.set(0, 0, Math.PI / 4);
+        cuttingAnimationActive = true;
+        leafCutParticles.visible = true;
+      } else if (type === 'bag') {
+        items3D.bag.visible = false;
+      }
+
+      const overlay = document.getElementById('progressOverlay');
+      const title = document.getElementById('progressTitle');
+      const circleBar = document.getElementById('progressCircleBar');
+      const percentTxt = document.getElementById('progressPercent');
+
+      title.innerText = stepTitles[type];
+      overlay.classList.add('active');
+
+      let progress = 0;
+      const duration = 2500;
+      const interval = 30;
+      const increment = (interval / duration) * 100;
+
+      const timer = setInterval(() => {
+        progress += increment;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(timer);
+          setTimeout(() => {
+            overlay.classList.remove('active');
+
+            if (activeEffect === 'soil') soilParticles.visible = false;
+            else if (activeEffect === 'seed') seedParticles.visible = false;
+            else if (activeEffect === 'water') waterParticles.visible = false;
+            else if (activeEffect === 'fertilizer') fertilizerParticles.visible = false;
+
+            if (type === 'pliers') {
+              cuttingAnimationActive = false;
+              leafCutParticles.visible = false;
+              items3D.pliers.visible = false;
+            } else if (type !== 'bag') {
+              items3D[type].visible = false;
+            }
+
+            activeEffect = null;
+            finishStep(type);
+            isProcessing = false;
+          }, 150);
+        }
+
+        const offset = 251 - (251 * progress) / 100;
+        circleBar.style.strokeDashoffset = offset;
+        percentTxt.innerText = `${Math.round(progress)}%`;
+      }, interval);
+    }
+
+    function finishStep(type) {
+      if (type === 'soil') soilMesh.scale.set(1, 1, 1);
+      else if (type === 'seed') plantGroup.scale.set(0.28, 0.28, 0.28);
+      else if (type === 'water') plantGroup.scale.set(0.6, 0.6, 0.6);
+      else if (type === 'fertilizer') plantGroup.scale.set(1.0, 1.0, 1.0);
+      else if (type === 'pliers') {
+        plantGroup.scale.set(0, 0, 0);
+        harvestedFlowersGroup.visible = true;
+      } else if (type === 'bag') {
+        potGroup.visible = false;
+        harvestedFlowersGroup.visible = false;
+        packedBagGroup.visible = true;
+      }
+
+      const idx = stepsOrder.indexOf(type);
+      if (idx < stepsOrder.length - 1) {
+        currentStep = stepsOrder[idx + 1];
+        if (activeHighlightRing) activeHighlightRing.visible = true;
+        document.getElementById('hudInstruction').innerText = instructions[currentStep];
+      } else {
+        document.getElementById('hudInstruction').innerText = "🌿 PROCESSO FINALIZADO!";
+        setTimeout(() => {
+          document.getElementById('successOverlay').classList.add('active');
+          setTimeout(() => { closeGame(); }, 2500);
+        }, 500);
+      }
+
+      sendCefEvent({ action: "stepComplete", step: type });
+    }
+
+    function closeLocalOverlay() {
+      const gameScreen = document.querySelector('.game-screen');
+      if (gameScreen) gameScreen.style.display = 'none';
+
+      try {
+        if (window.Android && typeof window.Android.close === 'function') {
+          window.Android.close();
+          return;
+        }
+      } catch (e) {}
+
+      try {
+        if (typeof window.__sampCloseLocalUi === 'function') {
+          window.__sampCloseLocalUi();
+          return;
+        }
+      } catch (e) {}
+
+      try {
+        if (typeof window.close === 'function') {
+          window.close();
+          return;
+        }
+      } catch (e) {}
+
+      sendCefEvent({ action: "close" });
+    }
+
+    function closeGame() { closeLocalOverlay(); }
+
+    function sendCefEvent(data) {
+      if (window.cefQuery) window.cefQuery({ request: JSON.stringify(data) });
+      else if (window.mta) mta.triggerEvent("crop:minigame", JSON.stringify(data));
+      else console.log("SAMP CEF Event:", data);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    init3D();
+  </script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNX - Aluguel de Motos</title>
+    <!-- Fonte moderna do Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        /* FUNDO 100% TRANSPARENTE PARA CEF / WEBVIEW */
+        html, body {
+            background-color: transparent !important;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        /* CONTAINERS & PAINEL ESTILO FIVEM */
+        .panel {
+            width: 340px;
+            background: rgba(15, 17, 23, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 2px solid #00f0ff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 
+                        0 0 20px rgba(0, 240, 255, 0.15);
+            position: relative;
+            color: #ffffff;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* CABEÇALHO */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-title .tag {
+            background: #ffaa00;
+            color: #000;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header h1 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        /* SELEÇÃO DE MOTOS (CARDS GRID) */
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8a8d9b;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .bikes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .bike-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bike-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(0, 240, 255, 0.4);
+        }
+
+        .bike-card.active {
+            background: rgba(0, 240, 255, 0.08);
+            border-color: #00f0ff;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+        }
+
+        .bike-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .bike-price {
+            font-size: 0.9rem;
+            color: #00f0ff;
+            font-weight: 600;
+        }
+
+        /* RESUMO DE PREÇO */
+        .summary-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            border-left: 3px solid #00f0ff;
+        }
+
+        .summary-title {
+            font-size: 0.85rem;
+            color: #a0a5b5;
+        }
+
+        .summary-total {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffaa00;
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
+        }
+
+        /* BOTAO DE AÇÃO */
+        .btn-rent {
+            width: 100%;
+            background: linear-gradient(90deg, #00f0ff, #0088ff);
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            color: #000;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-rent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 240, 255, 0.5);
+        }
+
+        .btn-rent:active {
+            transform: translateY(0);
+        }
+
+        /* CAIXA DE STATUS INTERNA */
+        .status-banner {
+            margin-top: 15px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        .status-banner.success {
+            display: block;
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+        }
+
+        .status-banner.error {
+            display: block;
+            background: rgba(255, 51, 102, 0.15);
+            border: 1px solid #ff3366;
+            color: #ff3366;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+        <div class="header">
+            <div class="header-title">
+                <span class="tag">CNX</span>
+                <h1>Aluguel de motos CNX</h1>
+            </div>
+        </div>
+
+        <span class="section-label">Escolha a Moto</span>
+        <div class="bikes-grid">
+            <div class="bike-card active" onclick="selectBike(this, 'Faggio', 50)">
+                <div class="bike-name">FAGGIO</div>
+                <div class="bike-price">R$ 50</div>
+            </div>
+            <div class="bike-card" onclick="selectBike(this, 'Sanchez', 150)">
+                <div class="bike-name">SANCHEZ</div>
+                <div class="bike-price">R$ 150</div>
+            </div>
+            <div class="bike-card" onclick="selectBike(this, 'PCJ-600', 350)">
+                <div class="bike-name">PCJ-600</div>
+                <div class="bike-price">R$ 350</div>
+            </div>
+            <div class="bike-card" onclick="selectBike(this, 'NRG-500', 800)">
+                <div class="bike-name">NRG-500</div>
+                <div class="bike-price">R$ 800</div>
+            </div>
+        </div>
+
+        <div class="summary-box">
+            <span class="summary-title">VALOR DO ALUGUEL:</span>
+            <span class="summary-total" id="totalPrice">R$ 50</span>
+        </div>
+
+        <button class="btn-rent" onclick="confirmRental()">ALUGAR AGORA</button>
+
+        <!-- MENSAGEM DE RETORNO EMBUTIDA -->
+        <div class="status-banner" id="statusBanner"></div>
+    </div>
+
+    <script>
+        let selectedBike = 'Faggio';
+        let selectedPrice = 50;
+
+        function selectBike(element, name, price) {
+            document.querySelectorAll('.bike-card').forEach(card => card.classList.remove('active'));
+            element.classList.add('active');
+            
+            selectedBike = name;
+            selectedPrice = price;
+            
+            document.getElementById('totalPrice').innerText = 'R$ ' + price.toLocaleString('pt-BR');
+            
+            const banner = document.getElementById('statusBanner');
+            banner.style.display = 'none';
+        }
+
+        function confirmRental() {
+            const banner = document.getElementById('statusBanner');
+
+            sendCommand('aluguel comprar ' + selectedBike);
+            banner.className = 'status-banner success';
+            banner.innerText = 'Solicitando aluguel...';
+        }
+
+        function sendCommand(command) {
+            if (!command) return;
+
+            if (window.Android && typeof window.Android.sendCommand === 'function') {
+                window.Android.sendCommand(command);
+                return;
+            }
+
+            if (window.CefBrowser && typeof window.CefBrowser.sendEvent === 'function') {
+                window.CefBrowser.sendEvent(20, 1, 'command|' + command);
+                return;
+            }
+
+            if (window.cef && typeof window.cef.emit === 'function') {
+                window.cef.emit('game:command', command);
+            }
+        }
+    </script>
+</body>
+</html>

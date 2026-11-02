@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Tablet OS - Gestão Criminal</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Rajdhani', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      outline: none !important;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      color: #e2e8f0;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    /* CARCAÇA FÍSICA DO TABLET RESPONSIVA PARA MOBILE LANDSCAPE */
+    .device-body {
+      width: min(92vw, 1280px, calc(78vh * 1.7778));
+      height: auto;
+      max-height: 78vh;
+      aspect-ratio: 16 / 9;
+      background: linear-gradient(145deg, #1f242d, #0d1015);
+      border-radius: clamp(18px, 3vw, 30px);
+      padding: clamp(7px, 1.1vw, 12px);
+      position: relative;
+      box-shadow: 
+        0 15px 40px rgba(0, 0, 0, 0.95),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .camera-lens {
+      position: absolute;
+      top: 50%;
+      left: 6px;
+      transform: translateY(-50%);
+      width: 7px;
+      height: 7px;
+      background: #090b0e;
+      border: 2px solid #2a3240;
+      border-radius: 50%;
+      z-index: 10;
+    }
+
+    .power-button {
+      position: absolute;
+      top: -5px;
+      right: 60px;
+      width: 40px;
+      height: 5px;
+      background: #2a3240;
+      border-radius: 4px 4px 0 0;
+      cursor: pointer;
+    }
+
+    .screen-display {
+      width: 100%;
+      height: 100%;
+      background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;
+      border-radius: clamp(14px, 2.5vw, 24px);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+      transition: opacity 0.3s ease;
+    }
+
+    .status-bar {
+      height: 24px;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 15px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #fff;
+      z-index: 50;
+    }
+
+    .status-bar .right-icons { display: flex; gap: 8px; align-items: center; }
+
+    .homescreen {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+      align-content: flex-start;
+      flex-wrap: wrap;
+      transition: all 0.3s ease;
+    }
+
+    .app-icon {
+      width: 70px;
+      height: 85px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .app-box {
+      width: 55px;
+      height: 55px;
+      background: linear-gradient(135deg, #e11d48, #881337);
+      border-radius: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      color: #fff;
+      box-shadow: 0 6px 15px rgba(225, 29, 72, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .app-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    .app-window {
+      position: absolute;
+      top: 24px; left: 0; width: 100%;
+      height: calc(100% - 24px);
+      min-width: 0;
+      min-height: 0;
+      background: #0f1218;
+      display: flex;
+      transform: scale(0.95);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease-out;
+      z-index: 40;
+    }
+
+    .app-window.open {
+      transform: scale(1);
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .sidebar {
+      width: clamp(130px, 16vw, 180px);
+      flex: 0 0 clamp(130px, 16vw, 180px);
+      background: #090b0f;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .org-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(225, 29, 72, 0.3);
+    }
+
+    .org-header i { font-size: 1.3rem; color: #e11d48; }
+    .org-header h2 { font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: #fff; text-transform: uppercase; word-break: break-word; }
+
+    .nav-menu { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: rgba(225, 29, 72, 0.18);
+      border-color: rgba(225, 29, 72, 0.4);
+      color: #fff;
+    }
+
+    .content-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      padding: clamp(10px, 1.1vw, 15px);
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-content { display: none; flex: 1; min-height: 0; flex-direction: column; overflow: auto; }
+    .tab-content.active { display: flex; }
+
+    .tab-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .tab-header h3 { font-family: 'Orbitron', sans-serif; font-size: 0.95rem; color: #fff; }
+
+    .btn-action {
+      background: #e11d48;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .table-container {
+      width: 100%;
+      background: #090b0e;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 100%;
+    }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+
+    th {
+      background: #121620;
+      color: #64748b;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      padding: 8px 10px;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .badge-rank {
+      background: rgba(225, 29, 72, 0.15);
+      color: #f43f5e;
+      border: 1px solid rgba(225, 29, 72, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+
+    .badge-status {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .status-active { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .status-inactive { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .actions-cell { display: flex; gap: 4px; }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .btn-icon:hover { background: #e11d48; color: #fff; }
+    .btn-icon.danger:hover { background: #dc2626; }
+
+    .home-bar-area {
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      width: 100%;
+      height: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 60;
+      cursor: pointer;
+    }
+
+    .home-indicator {
+      width: 100px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 10px;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-box {
+      width: min(90%, 320px);
+      background: #0f1218;
+      border: 1px solid #e11d48;
+      border-radius: 10px;
+      padding: 15px;
+    }
+
+    .modal-box h4 { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: #fff; margin-bottom: 10px; }
+
+    .form-group { margin-bottom: 8px; display: flex; flex-direction: column; gap: 2px; }
+    .form-group label { color: #64748b; font-size: 0.7rem; }
+    .form-group input, .form-group select {
+      background: #060709;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 6px 8px;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 0.8rem;
+    }
+
+    .modal-buttons { display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; }
+    .btn-cancel { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #aaa; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="device-body">
+    <div class="camera-lens"></div>
+    <div class="power-button" onclick="togglePower()"></div>
+
+    <div class="screen-display" id="screenDisplay">
+
+      <div class="status-bar">
+        <span id="clockDisplay">12:00</span>
+        <div class="right-icons">
+          <i class="fa-solid fa-wifi"></i>
+          <i class="fa-solid fa-signal"></i>
+          <i class="fa-solid fa-battery-three-quarters"></i>
+        </div>
+      </div>
+
+      <div class="homescreen">
+        <div class="app-icon" onclick="openApp('factionApp')">
+          <div class="app-box"><i class="fa-solid fa-skull-crossbones"></i></div>
+          <span class="app-label">Cartel OS</span>
+        </div>
+      </div>
+
+      <div class="app-window" id="factionApp">
+        <div class="sidebar">
+          <div>
+            <div class="org-header">
+              <i class="fa-solid fa-skull"></i>
+              <div>
+                <h2 id="orgNameTitle">TROPA DA ESPANHA</h2>
+                <span style="font-size: 0.65rem; color: #64748b;">FACÇÃO CRIMINAL</span>
+              </div>
+            </div>
+
+            <div class="nav-menu">
+              <button type="button" class="nav-btn active" onclick="switchTab('members', this)">
+                <i class="fa-solid fa-users"></i> Membros
+              </button>
+              <button type="button" class="nav-btn" onclick="switchTab('ranks', this)">
+                <i class="fa-solid fa-layer-group"></i> Cargos
+              </button>
+            </div>
+          </div>
+
+          <div style="font-size: 0.65rem; color: #475569; text-align: center;">
+            Encrypted OS v3.1
+          </div>
+        </div>
+
+        <div class="content-area">
+
+          <div id="tab-members" class="tab-content active">
+            <div class="tab-header">
+              <h3>MEMBROS DA ORGANIZAÇÃO</h3>
+              <button type="button" class="btn-action" onclick="openModal('addMember')" id="btnAddMember" style="display: none;">
+                <i class="fa-solid fa-user-plus"></i> Adicionar Membro
+              </button>
+            </div>
+
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>NOME</th>
+                    <th>CARGO</th>
+                    <th>AÇÕES</th>
+                  </tr>
+                </thead>
+                <tbody id="members-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="tab-ranks" class="tab-content">
+            <div class="tab-header">
+              <h3>GERENCIAR CARGOS</h3>
+              <button type="button" class="btn-action" onclick="openModal('addRank')" id="btnAddRank" style="display: none;">
+                <i class="fa-solid fa-plus"></i> Novo Cargo
+              </button>
+            </div>
+
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ORDEM</th>
+                    <th>CARGO</th>
+                    <th>AÇÕES</th>
+                  </tr>
+                </thead>
+                <tbody id="ranks-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="home-bar-area" onclick="goHome()">
+        <div class="home-indicator"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAIS -->
+  <div class="modal-overlay" id="modalMember">
+    <div class="modal-box">
+      <h4 id="modalMemberTitle">ADICIONAR MEMBRO</h4>
+      <input type="hidden" id="editMemberId">
+      
+      <div class="form-group" id="groupMemberPlayerId">
+        <label>ID do Jogador</label>
+        <input type="number" id="memberPlayerId" placeholder="Ex: 102">
+      </div>
+
+      <div class="form-group">
+        <label>Cargo</label>
+        <select id="memberRankSelect"></select>
+      </div>
+
+      <div class="modal-buttons">
+        <button type="button" class="btn-cancel" onclick="closeModal('modalMember')">Cancelar</button>
+        <button type="button" class="btn-action" onclick="saveMember()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalRank">
+    <div class="modal-box">
+      <h4 id="modalRankTitle">NOVO CARGO</h4>
+      <input type="hidden" id="editRankId">
+
+      <div class="form-group">
+        <label>Nome do Cargo</label>
+        <input type="text" id="rankName" placeholder="Ex: Capitão">
+      </div>
+
+      <div class="form-group">
+        <label>Tipo do Cargo</label>
+        <select id="rankType">
+          <option value="normal">Normal</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+
+      <div class="modal-buttons">
+        <button type="button" class="btn-cancel" onclick="closeModal('modalRank')">Cancelar</button>
+        <button type="button" class="btn-action" onclick="saveRank()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentOrgName = "TROPA DA ESPANHA";
+    let currentUserRankType = 'normal';
+    let currentUserIsLeader = false;
+
+    function normalizeRankType(type) {
+      const value = String(type || 'normal').trim().toLowerCase();
+      if (value === 'lider' || value === 'leader' || value === 'admin') return 'admin';
+      return 'normal';
+    }
+
+    function hasAccess(requiredType) {
+      const userType = normalizeRankType(currentUserRankType);
+      if (requiredType === 'normal') return true;
+      if (requiredType === 'admin') return userType === 'admin';
+      return false;
+    }
+
+    function getRankTypeLabel(type) {
+      return type === 'admin' ? 'Admin' : 'Normal';
+    }
+
+    let ranks = [
+      { id: 1, name: 'Líder', type: 'admin' },
+      { id: 2, name: 'Sub-Líder', type: 'admin' },
+      { id: 3, name: 'Soldado', type: 'normal' },
+      { id: 4, name: 'Novato', type: 'normal' }
+    ];
+
+    let members = [
+      { id: 1, playerId: 101, name: "Carlos_Gotta", rankId: 1 },
+      { id: 2, playerId: 105, name: "Victor_Vance", rankId: 2 },
+      { id: 3, playerId: 112, name: "Lucas_Mendes", rankId: 3 }
+    ];
+
+    function updateTabletData(jsonString) {
+      try {
+        const data = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
+        if (data.orgName) {
+          currentOrgName = data.orgName;
+          document.getElementById('orgNameTitle').innerText = currentOrgName.toUpperCase();
+        }
+        if (data.userRankType || data.rankType || data.gmRankType || data.currentUserRankType) {
+          currentUserRankType = normalizeRankType(data.userRankType || data.rankType || data.gmRankType || data.currentUserRankType);
+        }
+        currentUserIsLeader = data.isLeader === true || data.isLeader === 1;
+        if (data.ranks) { ranks = data.ranks; renderRanks(); }
+        if (data.members) { members = data.members; renderMembers(); }
+      } catch(e) { console.error("Erro ao ler JSON:", e); }
+    }
+
+    function sendCommand(cmd) {
+      const normalized = typeof cmd === 'string' ? cmd.trim() : '';
+      if (!normalized) return;
+      try {
+        if (window.Android && typeof window.Android.sendCommand === 'function') return window.Android.sendCommand(normalized);
+        if (window.CefBrowser && typeof window.CefBrowser.sendEvent === 'function') return window.CefBrowser.sendEvent(20, 1, 'command|' + normalized);
+        if (window.cef && typeof window.cef.emit === 'function') return window.cef.emit('game:command', normalized);
+      } catch(e) { console.error('[TBO] command error:', e); }
+    }
+
+    function openApp(appId) {
+      document.querySelectorAll('.app-window').forEach(app => app.classList.remove('open'));
+      const app = document.getElementById(appId);
+      if (app) app.classList.add('open');
+    }
+
+    function closeApp() {
+      document.querySelectorAll('.app-window').forEach(app => app.classList.remove('open'));
+      if (window.Android && typeof window.Android.close === 'function') {
+        window.Android.close();
+        return;
+      }
+      try { window.close(); } catch(e) {}
+    }
+
+    function goHome() {
+      const openWindow = document.querySelector('.app-window.open');
+      if (openWindow) {
+        openWindow.classList.remove('open');
+        return;
+      }
+      closeApp();
+    }
+
+    function switchTab(tabName, button) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(navButton => navButton.classList.remove('active'));
+
+      const tab = document.getElementById(`tab-${tabName}`);
+      if (tab) tab.classList.add('active');
+      if (button) button.classList.add('active');
+    }
+
+    window.orgTabletBridge = {
+      reset: function() { ranks = []; members = []; renderRanks(); renderMembers(); },
+      addRank: function(rank) { if (rank) ranks.push(rank); renderRanks(); },
+      addMember: function(member) { if (member) members.push(member); renderMembers(); }
+    };
+
+    window.addEventListener('message', function(event) {
+      const data = event.data || {};
+      if (data.action === 'openTablet') {
+        updateTabletData(data);
+        openApp('factionApp');
+      } else if (data.action === 'closeTablet') {
+        closeApp();
+      }
+    });
+
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('clockDisplay').innerText = `${hours}:${minutes}`;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function renderRanks() {
+      const tbody = document.getElementById('ranks-table-body');
+      const canManageRanks = currentUserIsLeader;
+      const addRankBtn = document.getElementById('btnAddRank');
+      if (addRankBtn) {
+        addRankBtn.style.display = canManageRanks || ranks.length === 0 ? 'flex' : 'none';
+      }
+
+      let html = '';
+
+      ranks.forEach((rank, index) => {
+        const rankType = rank.type || 'normal';
+        const canEdit = canManageRanks;
+        const actionsHtml = canEdit
+          ? `
+              <button type="button" class="btn-icon" onclick="editRank(${rank.id})" title="Editar Cargo"><i class="fa-solid fa-pen"></i></button>
+              <button type="button" class="btn-icon danger" onclick="deleteRank(${rank.id})" title="Excluir Cargo"><i class="fa-solid fa-trash"></i></button>
+            `
+          : '<span style="color:#64748b; font-size:0.72rem;">—</span>';
+
+        html += `
+          <tr>
+            <td>#${index + 1}</td>
+            <td>
+              <span class="badge-rank">${rank.name}</span>
+              <span style="margin-left:8px; font-size:11px; opacity:0.8;">(${getRankTypeLabel(rankType)})</span>
+            </td>
+            <td class="actions-cell">${actionsHtml}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+
+      const select = document.getElementById('memberRankSelect');
+      let selectHtml = '';
+      ranks.forEach(rank => {
+        selectHtml += `<option value="${rank.id}">${rank.name}</option>`;
+      });
+      select.innerHTML = selectHtml;
+    }
+
+    function renderMembers() {
+      const tbody = document.getElementById('members-table-body');
+      const canManageMembers = hasAccess('admin');
+      const addMemberBtn = document.getElementById('btnAddMember');
+      if (addMemberBtn) {
+        addMemberBtn.style.display = canManageMembers ? 'flex' : 'none';
+      }
+
+      let html = '';
+
+      members.forEach(member => {
+        const rankObj = member.rankId === 0
+          ? { name: 'Líder', type: 'admin' }
+          : ranks.find(r => r.id === member.rankId) || { name: 'Sem Cargo', type: 'normal' };
+        const actionsHtml = canManageMembers
+          ? `
+              <button type="button" class="btn-icon" onclick="editMember(${member.id})" title="Alterar Cargo"><i class="fa-solid fa-user-pen"></i></button>
+              <button type="button" class="btn-icon danger" onclick="deleteMember(${member.id})" title="Remover Membro"><i class="fa-solid fa-user-minus"></i></button>
+            `
+          : '<span style="color:#64748b; font-size:0.72rem;">—</span>';
+
+        html += `
+          <tr>
+            <td>${member.playerId}</td>
+            <td>${member.name}</td>
+            <td><span class="badge-rank">${rankObj.name}</span></td>
+            <td class="actions-cell">${actionsHtml}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function openModal(type) {
+      if (type === 'addMember' && !hasAccess('admin')) return;
+      if (type === 'addRank' && !currentUserIsLeader) return;
+
+      if (type === 'addMember') {
+        document.getElementById('modalMemberTitle').innerText = "ADICIONAR MEMBRO";
+        document.getElementById('editMemberId').value = "";
+        document.getElementById('memberPlayerId').value = "";
+        document.getElementById('groupMemberPlayerId').style.display = "flex";
+        document.getElementById('modalMember').classList.add('active');
+      } else if (type === 'addRank') {
+        document.getElementById('modalRankTitle').innerText = "NOVO CARGO";
+        document.getElementById('editRankId').value = "";
+        document.getElementById('rankName').value = "";
+        document.getElementById('rankType').value = "normal";
+        document.getElementById('modalRank').classList.add('active');
+      }
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    function saveRank() {
+      const id = document.getElementById('editRankId').value;
+      const name = document.getElementById('rankName').value.trim();
+      const type = document.getElementById('rankType').value;
+      if (!name) return;
+
+      sendCommand(`tbo rank_save ${id || 0}|${name}|${type}`);
+      closeModal('modalRank');
+    }
+
+    function editRank(id) {
+      const rank = ranks.find(r => r.id === id);
+      if (!rank) return;
+      document.getElementById('modalRankTitle').innerText = "EDITAR CARGO";
+      document.getElementById('editRankId').value = rank.id;
+      document.getElementById('rankName').value = rank.name;
+      document.getElementById('rankType').value = rank.type || 'normal';
+      document.getElementById('modalRank').classList.add('active');
+    }
+
+    function deleteRank(id) {
+      sendCommand(`tbo rank_delete ${id}`);
+    }
+
+    function saveMember() {
+      const id = document.getElementById('editMemberId').value;
+      const playerId = document.getElementById('memberPlayerId').value;
+      const rankId = parseInt(document.getElementById('memberRankSelect').value);
+
+      if (id) {
+        const member = members.find(m => m.id == id);
+        if (member) {
+          if (member.playerId > 0) {
+            sendCommand(`tbo member_setrank ${member.playerId} ${rankId}`);
+          } else if (Number.isInteger(member.memberSlot) && member.memberSlot >= 0) {
+            sendCommand(`tbo member_slot_set ${member.memberSlot} ${rankId}`);
+          }
+        }
+      } else {
+        if (!playerId) return;
+        sendCommand(`tbo member_add ${parseInt(playerId)} ${rankId}`);
+      }
+
+      closeModal('modalMember');
+    }
+
+    function editMember(id) {
+      const member = members.find(m => m.id === id);
+      if (!member) return;
+      document.getElementById('modalMemberTitle').innerText = "ALTERAR CARGO DO MEMBRO";
+      document.getElementById('editMemberId').value = member.id;
+      document.getElementById('groupMemberPlayerId').style.display = "none";
+      document.getElementById('memberRankSelect').value = member.rankId;
+      document.getElementById('modalMember').classList.add('active');
+    }
+
+    function deleteMember(id) {
+      const member = members.find(m => m.id === id);
+      if (member && member.playerId > 0) sendCommand(`tbo member_remove ${member.playerId}`);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      sendCommand('tbo ready');
+      renderRanks();
+      renderMembers();
+    });
+  </script>
+</body>
+</html>

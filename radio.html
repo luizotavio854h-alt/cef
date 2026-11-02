@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Rádio Intelbras Realista HD</title>
+  <link href="https://fonts.cdnfonts.com/css/digital-7-mono" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      background: transparent;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+    }
+
+    /* Container do Rádio */
+    .radio-wrapper {
+      position: absolute;
+      top: 52%;
+      right: clamp(180px, 21vw, 500px);
+      left: auto;
+      width: clamp(108px, 6vw, 145px);
+      height: clamp(236px, 13.2vw, 317px);
+      max-width: calc(100vw - 320px);
+      max-height: calc(100vh - 40px);
+      transform: translateY(-50%);
+      filter: drop-shadow(14px 18px 22px rgba(0, 0, 0, 0.85));
+    }
+
+    .radio-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Tela LCD - Texto sobreposto */
+    .lcd-overlay {
+      position: absolute;
+      top: 31.2%;
+      left: 17.7%;
+      width: 64.6%;
+      height: 13.8%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: clamp(1px, 0.18vw, 3px) clamp(2px, 0.25vw, 5px);
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 5;
+      transition: opacity 0.2s ease;
+    }
+
+    .lcd-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-size: clamp(5px, 0.36vw, 9px);
+      font-weight: 900;
+      color: #1a0800;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .channel-display {
+      font-family: 'Digital-7 Mono', monospace;
+      font-size: clamp(15px, 1.1vw, 27px);
+      font-weight: bold;
+      color: #050200;
+      line-height: 0.8;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
+      text-shadow: 0 0 1px rgba(0,0,0,0.15);
+    }
+
+    .status-display {
+      font-size: clamp(5px, 0.36vw, 9px);
+      font-weight: 900;
+      color: #1a0800;
+      letter-spacing: 0.8px;
+      white-space: nowrap;
+    }
+
+    /* Áreas de clique interativas */
+    .click-area {
+      position: absolute;
+      cursor: pointer;
+      z-index: 10;
+      border-radius: 4px;
+    }
+
+    .btn-ptt { left: 3.1%; top: 32.1%; width: 7.3%; height: 20.2%; }
+    .btn-power { left: 18.75%; top: 47.4%; width: 18.2%; height: 6.7%; }
+    .btn-menu { left: 41.1%; top: 47.4%; width: 18.2%; height: 6.7%; }
+    .btn-call { left: 63%; top: 47.4%; width: 18.2%; height: 6.7%; }
+    .btn-down { left: 18.75%; top: 55%; width: 18.2%; height: 6.7%; }
+    .btn-up { left: 63%; top: 55%; width: 18.2%; height: 6.7%; }
+
+    /* Efeito de Clique Táctil nos Botões SVG */
+    .btn-interactive {
+      transition: transform 0.05s ease, filter 0.05s ease;
+      cursor: pointer;
+    }
+    .btn-interactive:active {
+      transform: translateY(1.5px);
+      filter: brightness(0.85);
+    }
+
+    /* Estados LIGADO / DESLIGADO / TRANSMITINDO */
+    .radio-wrapper.off .lcd-overlay { opacity: 0.03; }
+    .radio-wrapper.off .svg-lcd-bg { fill: #1c1c1c !important; }
+    .radio-wrapper.off .svg-led { fill: #2a2a2a !important; filter: none !important; }
+    
+    .radio-wrapper.tx .svg-lcd-bg { fill: url(#lcdTxGrad) !important; }
+    .radio-wrapper.tx .svg-led { fill: #ff1744 !important; filter: drop-shadow(0 0 5px #ff1744); }
+  </style>
+</head>
+<body>
+
+  <div class="radio-wrapper" id="radioApp">
+    
+    <!-- Display LCD de números -->
+    <div class="lcd-overlay">
+      <div class="lcd-header">
+        <span>RX ▮▮▮</span>
+        <span>CH</span>
+      </div>
+      <div class="channel-display" id="chDisplay">16.00</div>
+      <div class="status-display" id="statusText">PRONTO</div>
+    </div>
+
+    <!-- ZONAS INTERATIVAS TRANSPARENTES -->
+    <div class="click-area btn-ptt" id="btnPTT" title="Segure para Falar (PTT)"></div>
+    <div class="click-area btn-power" id="btnPower" title="Ligar/Desligar"></div>
+    <div class="click-area btn-menu" id="btnMenu" title="Menu"></div>
+    <div class="click-area btn-call" id="btnCall" title="Chamada"></div>
+    <div class="click-area btn-down" id="btnDown" title="Diminuir Canal"></div>
+    <div class="click-area btn-up" id="btnUp" title="Aumentar Canal"></div>
+
+    <!-- VETOR INDUSTRIALsvg COM ILUMINAÇÃO 3D -->
+    <svg class="radio-svg" viewBox="0 0 192 420" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Gradientes do Corpo de Plástico ABS Amarelo -->
+        <radialGradient id="bodyGrad" cx="45%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#ffc107"/>
+          <stop offset="50%" stop-color="#ffa000"/>
+          <stop offset="85%" stop-color="#ff8f00"/>
+          <stop offset="100%" stop-color="#c77800"/>
+        </radialGradient>
+
+        <!-- Gradiente da Placa Frontal Preta -->
+        <linearGradient id="panelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#383838"/>
+          <stop offset="15%" stop-color="#222222"/>
+          <stop offset="80%" stop-color="#141414"/>
+          <stop offset="100%" stop-color="#0a0a0a"/>
+        </linearGradient>
+
+        <!-- Gradientes do Visor LCD -->
+        <radialGradient id="lcdGrad" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#ffca28"/>
+          <stop offset="70%" stop-color="#ffa000"/>
+          <stop offset="100%" stop-color="#e65100"/>
+        </radialGradient>
+
+        <radialGradient id="lcdTxGrad" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#ff5252"/>
+          <stop offset="75%" stop-color="#d50000"/>
+          <stop offset="100%" stop-color="#8e0000"/>
+        </radialGradient>
+
+        <!-- Gradiente Metálico/Plástico Escuro dos Botões -->
+        <linearGradient id="btnGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#4f4f4f"/>
+          <stop offset="40%" stop-color="#2b2b2b"/>
+          <stop offset="100%" stop-color="#181818"/>
+        </linearGradient>
+
+        <!-- Gradientes de Knob e Antena -->
+        <linearGradient id="knobGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#111111"/>
+          <stop offset="40%" stop-color="#4e4e4e"/>
+          <stop offset="70%" stop-color="#222222"/>
+          <stop offset="100%" stop-color="#080808"/>
+        </linearGradient>
+
+        <!-- Sombra Projetada Suave (Drop Shadow Interna) -->
+        <filter id="shadowBevel" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.6"/>
+        </filter>
+      </defs>
+
+      <!-- Knob de Volume Superior (Esquerda) -->
+      <rect x="40" y="30" width="22" height="20" rx="3" fill="url(#knobGrad)" stroke="#000" stroke-width="0.8"/>
+      <rect x="50" y="30" width="2" height="20" fill="#ff9800"/>
+
+      <!-- Base da Antena e Haste (Direita) -->
+      <rect x="130" y="36" width="24" height="14" rx="2" fill="url(#knobGrad)" stroke="#000" stroke-width="0.8"/>
+      <path d="M133,36 L135,0 L149,0 L151,36 Z" fill="url(#knobGrad)"/>
+      <line x1="135" y1="9" x2="149" y2="9" stroke="#0a0a0a" stroke-width="2.5"/>
+      <line x1="135" y1="18" x2="149" y2="18" stroke="#0a0a0a" stroke-width="2.5"/>
+      <line x1="135" y1="27" x2="149" y2="27" stroke="#0a0a0a" stroke-width="2.5"/>
+
+      <!-- PTT Lateral -->
+      <rect x="6" y="135" width="13" height="85" rx="4" fill="url(#knobGrad)" stroke="#000" stroke-width="1"/>
+      <!-- Textura no PTT -->
+      <line x1="9" y1="155" x2="14" y2="155" stroke="#555" stroke-width="1.5"/>
+      <line x1="9" y1="165" x2="14" y2="165" stroke="#555" stroke-width="1.5"/>
+      <line x1="9" y1="175" x2="14" y2="175" stroke="#555" stroke-width="1.5"/>
+      <line x1="9" y1="185" x2="14" y2="185" stroke="#555" stroke-width="1.5"/>
+
+      <!-- Carcaça Principal (Amarela) com Borda Industrial -->
+      <rect x="18" y="48" width="156" height="360" rx="32" fill="url(#bodyGrad)" stroke="#8d4b00" stroke-width="2"/>
+      
+      <!-- Detalhe de Frisos e Borrachas de Pegada Lateral -->
+      <rect x="14" y="95" width="8" height="220" rx="3" fill="#1b1b1b" stroke="#0d0d0d" stroke-width="0.5"/>
+      <rect x="170" y="95" width="8" height="220" rx="3" fill="#1b1b1b" stroke="#0d0d0d" stroke-width="0.5"/>
+
+      <!-- Parafusos Allen nos cantos da Carcaça -->
+      <circle cx="30" cy="62" r="3" fill="#2b2b2b" stroke="#111" stroke-width="0.5"/>
+      <circle cx="162" cy="62" r="3" fill="#2b2b2b" stroke="#111" stroke-width="0.5"/>
+      <line x1="28.5" y1="62" x2="31.5" y2="62" stroke="#000" stroke-width="1"/>
+      <line x1="160.5" y1="62" x2="163.5" y2="62" stroke="#000" stroke-width="1"/>
+
+      <!-- Painel Frontal Embutido (Preto Fosco) -->
+      <rect x="26" y="70" width="140" height="326" rx="22" fill="url(#panelGrad)" stroke="#000" stroke-width="2"/>
+
+      <!-- LED Indicador de Status (RX/TX) -->
+      <circle cx="152" cy="82" r="4.5" fill="#111" />
+      <circle class="svg-led" cx="152" cy="82" r="3.5" fill="#00e676" filter="drop-shadow(0 0 4px #00e676)"/>
+
+      <!-- Moldura Externa da Tela LCD com Bisel 3D -->
+      <rect x="31" y="128" width="130" height="64" rx="9" fill="#080808" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- Fundo da Tela LCD -->
+      <rect class="svg-lcd-bg" x="34" y="131" width="124" height="58" rx="6" fill="url(#lcdGrad)" />
+      <!-- Reflexo de Vidro Diagnonal Curvo -->
+      <path d="M34,131 L158,131 L95,189 L34,189 Z" fill="rgba(255, 255, 255, 0.16)" pointer-events="none"/>
+
+      <!-- Moldura Embutida do Teclado -->
+      <rect x="31" y="195" width="130" height="68" rx="8" fill="#121212" stroke="#252525" stroke-width="1"/>
+
+      <!-- GRUPO DE BOTÕES TRIDIMENSIONAIS (3D) -->
+      <!-- Botão Ligar/Desligar -->
+      <g class="btn-interactive" id="btnPowerGroup">
+        <rect x="36" y="199" width="35" height="27" rx="5" fill="url(#btnGrad)" stroke="#000" stroke-width="1" filter="url(#shadowBevel)"/>
+        <text x="53.5" y="217" font-size="13" fill="#ff3d00" text-anchor="middle" font-weight="bold">⏻</text>
+      </g>
+
+      <!-- Botão Menu -->
+      <g class="btn-interactive" id="btnMenuGroup">
+        <rect x="79" y="199" width="35" height="27" rx="5" fill="url(#btnGrad)" stroke="#000" stroke-width="1" filter="url(#shadowBevel)"/>
+        <text x="96.5" y="216" font-size="8.5" fill="#ffb300" text-anchor="middle" font-weight="900" font-family="Arial">MENU</text>
+      </g>
+
+      <!-- Botão Chamada -->
+      <g class="btn-interactive" id="btnCallGroup">
+        <rect x="121" y="199" width="35" height="27" rx="5" fill="url(#btnGrad)" stroke="#000" stroke-width="1" filter="url(#shadowBevel)"/>
+        <text x="138.5" y="216" font-size="8.5" fill="#ffb300" text-anchor="middle" font-weight="900" font-family="Arial">CALL</text>
+      </g>
+
+      <!-- Botão Para Baixo (▼) -->
+      <g class="btn-interactive" id="btnDownGroup">
+        <rect x="36" y="231" width="35" height="27" rx="5" fill="url(#btnGrad)" stroke="#000" stroke-width="1" filter="url(#shadowBevel)"/>
+        <text x="53.5" y="248" font-size="10" fill="#ffb300" text-anchor="middle" font-weight="bold">▼</text>
+      </g>
+
+      <!-- Botão Para Cima (▲) -->
+      <g class="btn-interactive" id="btnUpGroup">
+        <rect x="121" y="231" width="35" height="27" rx="5" fill="url(#btnGrad)" stroke="#000" stroke-width="1" filter="url(#shadowBevel)"/>
+        <text x="138.5" y="248" font-size="10" fill="#ffb300" text-anchor="middle" font-weight="bold">▲</text>
+      </g>
+
+      <!-- Marca e Modelo Gravados -->
+      <text x="36" y="281" font-family="Segoe UI, Arial" font-size="11.5" font-weight="900" fill="#ff9800" letter-spacing="0.3">intelbras</text>
+      <text x="156" y="281" font-family="Segoe UI, Arial" font-size="7.5" font-weight="800" fill="#888" text-anchor="end">RC 1602</text>
+
+      <!-- Grade do Alto-Falante Perfurada Profunda -->
+      <g>
+        <rect x="34" y="291" width="124" height="95" rx="10" fill="url(#bodyGrad)" stroke="#9a5200" stroke-width="1"/>
+        <!-- Furos horizontais com profundidade -->
+        <rect x="40" y="301" width="112" height="4.5" rx="2" fill="#0c0c0c" stroke="#663300" stroke-width="0.4"/>
+        <rect x="40" y="311" width="112" height="4.5" rx="2" fill="#0c0c0c" stroke="#663300" stroke-width="0.4"/>
+        <rect x="40" y="321" width="112" height="4.5" rx="2" fill="#0c0c0c" stroke="#663300" stroke-width="0.4"/>
+        <rect x="40" y="331" width="112" height="4.5" rx="2" fill="#0c0c0c" stroke="#663300" stroke-width="0.4"/>
+        <rect x="40" y="341" width="112" height="4.5" rx="2" fill="#0c0c0c" stroke="#663300" stroke-width="0.4"/>
+        <rect x="40" y="351" width="112" height="4.5" rx="2" fill="#0c0c0c" stroke="#663300" stroke-width="0.4"/>
+        <rect x="40" y="361" width="112" height="4.5" rx="2" fill="#0c0c0c" stroke="#663300" stroke-width="0.4"/>
+        <rect x="40" y="371" width="112" height="4.5" rx="2" fill="#0c0c0c" stroke="#663300" stroke-width="0.4"/>
+      </g>
+    </svg>
+
+  </div>
+
+  <script>
+    let frequency = 16.00;
+    let isOn = true;
+    let isTransmitting = false;
+
+    const radioApp = document.getElementById('radioApp');
+    const chDisplay = document.getElementById('chDisplay');
+    const statusText = document.getElementById('statusText');
+    const btnPTT = document.getElementById('btnPTT');
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    let noiseNode = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext();
+    }
+
+    function playBeep(freq = 900, duration = 0.05) {
+      if (!isOn) return;
+      initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // Áudio Realista do Baofeng/Intelbras
+    function playBaofengOriginalSound() {
+      if (!isOn) return;
+      initAudio();
+      const now = audioCtx.currentTime;
+
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(2480, now);
+      gain1.gain.setValueAtTime(0.2, now);
+      gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.04);
+
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(2620, now + 0.045);
+      gain2.gain.setValueAtTime(0.2, now + 0.045);
+      gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(now + 0.045);
+      osc2.stop(now + 0.08);
+
+      const osc3 = audioCtx.createOscillator();
+      const gain3 = audioCtx.createGain();
+      osc3.type = 'sine';
+      osc3.frequency.setValueAtTime(2100, now + 0.085);
+      osc3.frequency.exponentialRampToValueAtTime(800, now + 0.13);
+      gain3.gain.setValueAtTime(0.22, now + 0.085);
+      gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+      osc3.connect(gain3);
+      gain3.connect(audioCtx.destination);
+      osc3.start(now + 0.085);
+      osc3.stop(now + 0.13);
+    }
+
+    function startStatic() {
+      initAudio();
+      const bufferSize = audioCtx.sampleRate * 2;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      noiseNode = audioCtx.createBufferSource();
+      noiseNode.buffer = buffer;
+      noiseNode.loop = true;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1400;
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+
+      noiseNode.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      noiseNode.start();
+    }
+
+    function stopStatic() {
+      if (noiseNode) {
+        noiseNode.stop();
+        noiseNode.disconnect();
+        noiseNode = null;
+      }
+    }
+
+    function updateFrequency(delta) {
+      if (!isOn || isTransmitting) return;
+      playBeep(1000, 0.04);
+      frequency = Math.min(Math.max(1.00, frequency + delta), 99.95);
+      chDisplay.innerText = frequency.toFixed(2);
+    }
+
+    document.getElementById('btnUp').addEventListener('click', () => updateFrequency(0.25));
+    document.getElementById('btnDown').addEventListener('click', () => updateFrequency(-0.25));
+
+    function closeRadioOverlay() {
+      if (window.Android && typeof window.Android.close === 'function') {
+        window.Android.close();
+        return;
+      }
+      if (typeof window.__sampCloseLocalUi === 'function') {
+        window.__sampCloseLocalUi();
+        return;
+      }
+      try { window.close(); } catch (e) {}
+    }
+
+    // O botão original de ligar/desligar também encerra o rádio no cliente.
+    document.getElementById('btnPower').addEventListener('click', closeRadioOverlay);
+
+    document.getElementById('btnCall').addEventListener('click', () => {
+      if (!isOn || isTransmitting) return;
+      playBaofengOriginalSound();
+      statusText.innerText = "CHAMANDO";
+      setTimeout(() => { if (isOn && !isTransmitting) statusText.innerText = "PRONTO"; }, 700);
+    });
+
+    document.getElementById('btnMenu').addEventListener('click', () => playBeep(800, 0.05));
+
+    function startPTT(e) {
+      if (e) e.preventDefault();
+      if (!isOn || isTransmitting) return;
+      isTransmitting = true;
+      radioApp.classList.add('tx');
+      statusText.innerText = "TX FALANDO";
+      playBaofengOriginalSound();
+      setTimeout(() => { if (isTransmitting) startStatic(); }, 150);
+    }
+
+    function stopPTT(e) {
+      if (e) e.preventDefault();
+      if (!isOn || !isTransmitting) return;
+      isTransmitting = false;
+      radioApp.classList.remove('tx');
+      statusText.innerText = "PRONTO";
+      stopStatic();
+      playBaofengOriginalSound();
+    }
+
+    btnPTT.addEventListener('mousedown', startPTT);
+    btnPTT.addEventListener('mouseup', stopPTT);
+    btnPTT.addEventListener('touchstart', startPTT);
+    btnPTT.addEventListener('touchend', stopPTT);
+  </script>
+</body>
+</html>

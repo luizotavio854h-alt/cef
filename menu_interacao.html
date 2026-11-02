@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu Radial - SAMP/SA-MP</title>
+
+  <!-- Font Awesome para os ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    /* Fundo simulando o Mundo do SAMP */
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: url('https://images.alphacoders.com/440/440785.jpg') no-repeat center center / cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Overlay escuro / blur no fundo */
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 1;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Container do Menu Radial */
+    .radial-menu-container {
+      position: relative;
+      width: 520px;
+      height: 520px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    }
+
+    /* Estilo da logo central "NE" com neon brilhante */
+    .center-logo {
+      position: absolute;
+      z-index: 10;
+      font-size: 56px;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: -2px;
+      cursor: pointer;
+      
+      background: linear-gradient(180deg, #ffffff 10%, #00d2ff 90%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      
+      filter: drop-shadow(0 0 12px rgba(0, 210, 255, 0.8)) drop-shadow(0 0 25px rgba(0, 162, 255, 0.6));
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    .center-logo:hover {
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 18px rgba(0, 210, 255, 1)) drop-shadow(0 0 35px rgba(0, 162, 255, 0.9));
+    }
+
+    .center-logo:active {
+      transform: scale(0.95);
+    }
+
+    /* Anel SVG */
+    .radial-svg {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform: rotate(-90deg); /* Faz o menu começar do topo */
+    }
+
+    /* Estilo de cada fatia do menu */
+    .slice-path {
+      fill: rgba(15, 18, 22, 0.75);
+      stroke: rgba(255, 255, 255, 0.1);
+      stroke-width: 2px;
+      cursor: pointer;
+      transition: fill 0.2s ease, stroke 0.2s ease, filter 0.2s ease;
+    }
+
+    /* Estado Hover / Selecionado */
+    .slice-group:hover .slice-path,
+    .slice-group.active .slice-path {
+      fill: rgba(0, 150, 240, 0.85);
+      stroke: #00d2ff;
+      stroke-width: 3px;
+      filter: drop-shadow(0 0 12px rgba(0, 162, 255, 0.9));
+    }
+
+    /* Elementos visuais (Ícone + Texto) */
+    .menu-items-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
+    .menu-item-node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .menu-item-node i {
+      font-size: 28px;
+      margin-bottom: 5px;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8));
+    }
+
+    .menu-item-node span {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-align: center;
+      max-width: 100px;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .slice-group:hover + .menu-item-node,
+    .slice-group.active + .menu-item-node {
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    /* Classe para esconder o menu */
+    .hidden {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: scale(0.7) !important;
+    }
+
+    /* Botão para testar reabertura do menu */
+    .reopen-btn {
+      position: absolute;
+      bottom: 30px;
+      z-index: 10;
+      padding: 12px 24px;
+      background: #00a2ff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 162, 255, 0.4);
+      transition: 0.2s ease;
+    }
+    .reopen-btn:hover {
+      background: #0077ff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Overlay de fundo sobre o SAMP -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Menu Radial Principal -->
+  <div class="radial-menu-container" id="radial-menu">
+    <!-- Botão Central 'NE' -->
+    <div class="center-logo" id="close-btn" title="Clique para fechar">NE</div>
+
+    <!-- Desenho do anel em SVG -->
+    <svg class="radial-svg" viewBox="0 0 520 520">
+      <g id="slices-group"></g>
+    </svg>
+
+    <!-- Ícones e Nomes das Categorias -->
+    <div class="menu-items-container" id="labels-container"></div>
+  </div>
+
+  <!-- Botão Auxiliar para Reabrir -->
+  <button class="reopen-btn" id="reopen-btn" style="display: none;">Abrir Menu Novamente</button>
+
+  <script>
+    // As 8 categorias configuradas para o Radial Menu NE
+    const menuData = [
+      { id: 'phone', icon: 'fa-solid fa-mobile-screen-button', label: 'Celular' },
+      { id: 'radio', icon: 'fa-solid fa-walkie-talkie', label: 'Rádio RP' },
+      { id: 'garage', icon: 'fa-solid fa-warehouse', label: 'Garagem' },
+      { id: 'org', icon: 'fa-solid fa-sitemap', label: 'Painel Org' },
+      { id: 'shop', icon: 'fa-solid fa-cart-shopping', label: 'Loja' },
+      { id: 'job', icon: 'fa-solid fa-briefcase', label: 'Empregos' },
+      { id: 'house', icon: 'fa-solid fa-house', label: 'Imóveis' },
+      { id: 'org_admin', icon: 'fa-solid fa-gear', label: 'Admin Org' }
+    ];
+
+    const centerX = 260;
+    const centerY = 260;
+    const innerRadius = 90;
+    const outerRadius = 230;
+    const gapDegrees = 3;
+
+    const slicesGroup = document.getElementById('slices-group');
+    const labelsContainer = document.getElementById('labels-container');
+    const radialMenu = document.getElementById('radial-menu');
+    const overlay = document.getElementById('overlay');
+    const closeBtn = document.getElementById('close-btn');
+    const reopenBtn = document.getElementById('reopen-btn');
+
+    function sendCommand(command) {
+      if (window.Android && typeof window.Android.sendCommand === 'function') {
+        window.Android.sendCommand(command);
+      } else if (window.CefBrowser && typeof window.CefBrowser.sendEvent === 'function') {
+        window.CefBrowser.sendEvent(20, 1, 'command|' + command);
+      }
+    }
+
+    const totalItems = menuData.length;
+    const sliceAngle = 360 / totalItems;
+
+    function degToRad(deg) {
+      return (deg * Math.PI) / 180;
+    }
+
+    function getCoordinates(angleDeg, radius) {
+      const rad = degToRad(angleDeg);
+      return {
+        x: centerX + radius * Math.cos(rad),
+        y: centerY + radius * Math.sin(rad)
+      };
+    }
+
+    function createSlicePath(startAngle, endAngle) {
+      const p1 = getCoordinates(startAngle, outerRadius);
+      const p2 = getCoordinates(endAngle, outerRadius);
+      const p3 = getCoordinates(endAngle, innerRadius);
+      const p4 = getCoordinates(startAngle, innerRadius);
+
+      const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
+
+      return [
+        `M ${p1.x} ${p1.y}`,
+        `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${p2.x} ${p2.y}`,
+        `L ${p3.x} ${p3.y}`,
+        `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${p4.x} ${p4.y}`,
+        'Z'
+      ].join(' ');
+    }
+
+    // Criar dinamicamente os elementos do menu
+    menuData.forEach((item, index) => {
+      const startAngle = index * sliceAngle + gapDegrees / 2;
+      const endAngle = (index + 1) * sliceAngle - gapDegrees / 2;
+
+      // Desenho da Fatia (SVG)
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('slice-group');
+      if (index === 0) g.classList.add('active');
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', createSlicePath(startAngle, endAngle));
+      path.classList.add('slice-path');
+
+      g.appendChild(path);
+      slicesGroup.appendChild(g);
+
+      // Posicionamento do Ícone + Texto no meio do arco
+      const midAngle = startAngle + (endAngle - startAngle) / 2 - 90;
+      const labelRadius = innerRadius + (outerRadius - innerRadius) / 2;
+      const labelPos = getCoordinates(midAngle, labelRadius);
+
+      const labelNode = document.createElement('div');
+      labelNode.classList.add('menu-item-node');
+      labelNode.style.left = `${labelPos.x}px`;
+      labelNode.style.top = `${labelPos.y}px`;
+
+      labelNode.innerHTML = `
+        <i class="${item.icon}"></i>
+        <span>${item.label}</span>
+      `;
+
+      labelsContainer.appendChild(labelNode);
+
+      // Eventos de Seleção e Clique nos Botões do Layout
+      g.addEventListener('mouseenter', () => {
+        document.querySelectorAll('.slice-group').forEach(el => el.classList.remove('active'));
+        g.classList.add('active');
+      });
+
+      g.addEventListener('click', () => {
+        console.log(`Categoria selecionada: ${item.label} (${item.id})`);
+        if (item.id === 'phone') sendCommand('/cell');
+        else if (item.id === 'radio') sendCommand('/radio');
+        else if (item.id === 'garage') sendCommand('/garagem');
+        else if (item.id === 'org') sendCommand('/tbo');
+        else if (item.id === 'shop') sendCommand('/loja');
+        else if (item.id === 'job') sendCommand('/agencia');
+        else if (item.id === 'house') sendCommand('/imobiliaria');
+        else if (item.id === 'org_admin') sendCommand('/painelorg');
+
+        closeMenu();
+      });
+    });
+
+    // Função de Fechar o Menu (Ao clicar no NE ou no ESC)
+    function closeMenu() {
+      radialMenu.classList.add('hidden');
+      overlay.classList.add('hidden');
+      setTimeout(() => {
+        reopenBtn.style.display = 'block';
+      }, 300);
+    }
+
+    // Função de Reabrir
+    function openMenu() {
+      radialMenu.classList.remove('hidden');
+      overlay.classList.remove('hidden');
+      reopenBtn.style.display = 'none';
+    }
+
+    // Ouvidores de Evento
+    closeBtn.addEventListener('click', closeMenu);
+    reopenBtn.addEventListener('click', openMenu);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMenu();
+    });
+  </script>
+</body>
+</html>

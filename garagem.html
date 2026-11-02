@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garagem RP</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@500;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+    body { background: transparent; color: #fff; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; padding: 12px; overflow: hidden; }
+
+    .ui-wrapper { display: flex; align-items: center; justify-content: center; width: max-content; height: max-content; padding: 12px; transform-origin: center center; transform: scale(var(--ui-scale, 1)); }
+
+    .garage-modal { width: 570px; height: auto; overflow: hidden; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 10px; border: 1px solid rgba(255, 215, 0, 0.25); box-shadow: 0 0 28px rgba(0, 0, 0, 0.9), 0 0 12px rgba(255, 215, 0, 0.1); padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 215, 0, 0.2); padding-bottom: 5px; }
+    .header-title { display: flex; align-items: center; gap: 6px; }
+    .header h1 { font-family: 'Orbitron', sans-serif; font-size: .9rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+
+    .carousel-container { overflow: hidden; }
+    .carousel-track { display: flex; gap: 6px; max-height: 96px; overflow-x: auto; overflow-y: hidden; padding: 3px 2px; }
+    .carousel-track::-webkit-scrollbar { display: none; }
+
+    .vehicle-card { min-width: 108px; background: rgba(20, 20, 20, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 4px; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; }
+    .vehicle-card img { width: 100%; height: 44px; object-fit: cover; border-radius: 4px; margin-bottom: 3px; }
+    .vehicle-card:hover { border-color: rgba(255, 215, 0, 0.5); transform: translateY(-3px); }
+    .vehicle-card.active { border: 1px solid #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+
+    .card-title { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+    .card-status { margin-top: 2px; font-size: 0.48rem; padding: 1px 4px; border-radius: 3px; text-transform: uppercase; }
+    
+    .status-garage { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    .status-out { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+    .details-panel { background: rgba(0, 0, 0, 0.6); border-radius: 6px; padding: 6px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+    .detail-item { display: flex; flex-direction: column; align-items: center; border-right: 1px solid rgba(255, 255, 255, 0.08); }
+    .detail-item:last-child { border-right: none; }
+    .detail-item span { font-size: 0.48rem; color: #888; text-transform: uppercase; }
+    .detail-item strong { color: #ffd700; font-size: 0.68rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+    .actions-bar { display: flex; flex: 0 0 auto; gap: 5px; width: 100%; }
+    .btn { flex: 1 1 0; min-width: 0; padding: 6px 4px; border: none; border-radius: 5px; font-family: 'Orbitron', sans-serif; font-size: 0.52rem; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+    .btn-pull { background: #ffd700; color: #000; }
+    .btn-park { background: rgba(255, 255, 255, 0.1); color: #fff; }
+    .btn-exit { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <div class="ui-wrapper">
+    <div class="garage-modal" id="garageModal">
+    <div class="header">
+      <div class="header-title"><h1>GARAGEM</h1></div>
+      <span id="vehicleCount">0 VEÍCULOS</span>
+    </div>
+
+    <div class="carousel-container">
+      <div class="carousel-track" id="vehicleCarousel"></div>
+    </div>
+
+    <div class="details-panel">
+      <div class="detail-item"><span>Placa</span><strong id="displayPlate">-</strong></div>
+      <div class="detail-item"><span>Combustível</span><strong id="displayFuel">-</strong></div>
+      <div class="detail-item"><span>Lataria</span><strong id="displayEngine">-</strong></div>
+      <div class="detail-item"><span>Status</span><strong id="displayStatus">-</strong></div>
+    </div>
+
+    <div class="actions-bar">
+      <button class="btn btn-pull" id="btnPull" onclick="pullVehicle()">Puxar</button>
+      <button class="btn btn-park" id="btnPark" onclick="parkVehicle()">Guardar</button>
+      <button class="btn btn-exit" onclick="closeGarage()">Sair</button>
+    </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const BASE_WIDTH = 594;
+      const BASE_HEIGHT = 240;
+
+      function updateUIScale() {
+        const safeWidth = window.innerWidth * 0.96;
+        const safeHeight = window.innerHeight * 0.96;
+        const scaleX = safeWidth / BASE_WIDTH;
+        const scaleY = safeHeight / BASE_HEIGHT;
+        const scale = Math.max(Math.min(scaleX, scaleY, 1.2), 0.35);
+        document.documentElement.style.setProperty('--ui-scale', scale.toFixed(4));
+      }
+
+      window.addEventListener('resize', updateUIScale);
+      window.addEventListener('orientationchange', () => setTimeout(updateUIScale, 100));
+      updateUIScale();
+    })();
+
+    // URLs diretas de imagens reais
+    const vehicleImages = {
+      "Sultan RS": "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?q=80&w=400",
+      "Elegy RH8": "https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=400",
+      "Bati 801": "https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=400"
+    };
+
+    let myVehicles = [];
+
+    let selectedVehicle = null;
+
+    function renderVehicles(vehicles) {
+      const track = document.getElementById('vehicleCarousel');
+      track.innerHTML = '';
+      
+      // Atualiza o contador de veículos
+      document.getElementById('vehicleCount').innerText = `${vehicles.length} VEÍCULOS`;
+
+      vehicles.forEach(veh => {
+        const card = document.createElement('div');
+        card.className = `vehicle-card ${selectedVehicle?.id === veh.id ? 'active' : ''}`;
+        card.onclick = () => selectVehicle(veh);
+        
+        const imgUrl = veh.image || vehicleImages[veh.name] || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=400";
+
+        card.innerHTML = `
+          <img src="${imgUrl}" alt="${veh.name}">
+          <div class="card-title">${veh.name || `Modelo ${veh.model}`}</div>
+          <div class="card-status ${veh.isStored ? 'status-garage' : 'status-out'}">
+            ${veh.isStored ? 'Guardado' : 'Fora'}
+          </div>
+        `;
+        track.appendChild(card);
+      });
+    }
+
+    function selectVehicle(veh) {
+      selectedVehicle = veh;
+      document.getElementById('displayPlate').innerText = veh.plate;
+      document.getElementById('displayFuel').innerText = veh.fuel;
+      document.getElementById('displayEngine').innerText = veh.engine;
+      document.getElementById('displayStatus').innerText = veh.isStored ? 'Guardado' : 'Fora';
+      document.getElementById('btnPull').disabled = !veh.isStored;
+      document.getElementById('btnPark').disabled = veh.isStored;
+      renderVehicles(myVehicles);
+    }
+
+    function closeGarage() {
+      // Oculta o painel HTML
+      document.getElementById('garageModal').style.display = 'none';
+
+      // Notifica o cliente SAMP / MTA
+      sendCommand('garagem fechar');
+    }
+
+    function pullVehicle() {
+      if (!selectedVehicle) return;
+      sendCommand(`garagem puxar ${selectedVehicle.slot}`);
+    }
+
+    function parkVehicle() {
+      if (!selectedVehicle) return;
+      sendCommand(`garagem guardar ${selectedVehicle.slot}`);
+    }
+
+    function sendCommand(command) {
+      if (!command) return;
+      if (window.Android && typeof window.Android.sendCommand === 'function') {
+        window.Android.sendCommand(command);
+        return;
+      }
+      if (window.CefBrowser && typeof window.CefBrowser.sendEvent === 'function') {
+        window.CefBrowser.sendEvent(20, 1, 'command|' + command);
+      }
+    }
+
+    window.garageBridge = {
+      open: function(data) {
+        myVehicles = (data && Array.isArray(data.vehicles) ? data.vehicles : []).map(vehicle => ({
+          ...vehicle,
+          name: vehicle.name || `Modelo ${vehicle.model}`,
+          fuel: `${vehicle.fuel}%`,
+          engine: `${vehicle.engine}`
+        }));
+        selectedVehicle = myVehicles[0] || null;
+        renderVehicles(myVehicles);
+        if (selectedVehicle) selectVehicle(selectedVehicle);
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+      sendCommand('garagem ready');
+    });
+
+    renderVehicles(myVehicles);
+  </script>
+</body>
+</html>

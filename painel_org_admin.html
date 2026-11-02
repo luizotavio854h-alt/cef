@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Painel de Criação e Edição de Organizações - Nova Era RP</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: rgba(10, 15, 25, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .org-admin-window {
+      width: min(92vw, 980px);
+      height: min(90vh, 650px);
+      background: rgba(18, 24, 38, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 240, 255, 0.15);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Cabeçalho */
+    .header-bar {
+      height: 65px;
+      padding: 0 24px;
+      background: linear-gradient(90deg, rgba(20, 30, 50, 0.9), rgba(12, 18, 30, 0.9));
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .title-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-box i {
+      font-size: 22px;
+      color: #00f0ff;
+    }
+
+    .title-box h1 {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .title-box span {
+      font-size: 11px;
+      color: #8a9bb0;
+      display: block;
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .close-btn:hover {
+      background: #ff3366;
+      border-color: #ff3366;
+    }
+
+    /* Navegação por Abas */
+    .tabs-bar {
+      display: flex;
+      gap: 10px;
+      padding: 12px 24px;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.04);
+      color: #a0aec0;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .tab-btn.active {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: #00f0ff;
+      color: #00f0ff;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    }
+
+    /* Conteúdo Principal */
+    .content-area {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #cbd5e0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .input-field, .select-field {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(10, 15, 26, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+      transition: border 0.2s ease;
+    }
+
+    .input-field:focus, .select-field:focus {
+      border-color: #00f0ff;
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    /* Seção de Pickups e Posições */
+    .section-box {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #00f0ff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .btn-action-pickup {
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action-pickup i {
+      font-size: 20px;
+      color: #00f0ff;
+    }
+
+    .btn-action-pickup:hover {
+      background: rgba(0, 240, 255, 0.2);
+      border-color: #00f0ff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.25);
+    }
+
+    /* Botão de Salvar */
+    .btn-submit {
+      padding: 14px 28px;
+      background: linear-gradient(90deg, #00f0ff, #0077ff);
+      border: none;
+      border-radius: 10px;
+      color: #000;
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+      transition: all 0.2s ease;
+      align-self: flex-end;
+    }
+
+    .btn-submit:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.7);
+    }
+
+    .status-msg {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      display: none;
+    }
+    .status-msg.success {
+      display: block;
+      background: rgba(46, 204, 113, 0.15);
+      border: 1px solid #2ecc71;
+      color: #2ecc71;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="org-admin-window">
+
+    <!-- Topo -->
+    <div class="header-bar">
+      <div class="title-box">
+        <i class="fa-solid fa-building-shield"></i>
+        <div>
+          <h1>PAINEL DE ORGANIZAÇÕES RP</h1>
+          <span>Crie, edite e posicione HQ, Pickups no chão e Garagem</span>
+        </div>
+      </div>
+      <button class="close-btn" onclick="closeAdminPanel()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Navegação -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" id="tab-create" onclick="switchTab('create')">
+        <i class="fa-solid fa-plus-circle"></i> Criar Nova Org
+      </button>
+      <button class="tab-btn" id="tab-edit" onclick="switchTab('edit')">
+        <i class="fa-solid fa-sliders"></i> Editar Org & Pickups no Chão
+      </button>
+      <button class="tab-btn" id="tab-vehicles" onclick="switchTab('vehicles')">
+        <i class="fa-solid fa-car"></i> Spawns de Veículos
+      </button>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="content-area">
+
+      <!-- STATUS ALERT -->
+      <div class="status-msg" id="statusBanner"></div>
+
+      <!-- ABA 1: CRIAR ORG -->
+      <div id="view-create">
+        <div class="section-box">
+          <div class="section-title"><i class="fa-solid fa-folder-plus"></i> Dados da Nova Organização</div>
+          <div class="form-grid">
+            <div class="input-group">
+              <label>Nome da Organização</label>
+              <input type="text" id="create-name" class="input-field" placeholder="Ex: Polícia Militar, Comando Vermelho...">
+            </div>
+            <div class="input-group">
+              <label>Tag / Sigla</label>
+              <input type="text" id="create-tag" class="input-field" placeholder="Ex: PMESP, CV, SAMU...">
+            </div>
+            <div class="input-group">
+              <label>Tipo de Organização</label>
+              <select id="create-type" class="select-field">
+                <option value="1">Polícia / Estatal</option>
+                <option value="2">Facção / Crime</option>
+                <option value="3">Hospital / SAMU</option>
+                <option value="4">Mecânica / Serviços</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Skin do Líder (ID)</label>
+              <input type="number" id="create-skin" class="input-field" value="288">
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-submit" style="margin-top:15px;" onclick="submitCreateOrg()">
+          <i class="fa-solid fa-check"></i> Criar Organização
+        </button>
+      </div>
+
+      <!-- ABA 2: EDITAR ORG & PICKUPS -->
+      <div id="view-edit" style="display: none;">
+        <div class="section-box">
+          <div class="section-title"><i class="fa-solid fa-pen-to-square"></i> Selecionar Organização</div>
+          <div class="input-group">
+            <label>ID da Org</label>
+            <input type="number" id="edit-org-id" class="input-field" value="1" placeholder="ID da Org...">
+          </div>
+        </div>
+
+        <div class="section-box">
+          <div class="section-title"><i class="fa-solid fa-location-crosshairs"></i> Posicionamento no Chão (Pickup & HQ)</div>
+          <div class="action-grid">
+            <button class="btn-action-pickup" onclick="sendOrgAction('set_hq_pickup')">
+              <i class="fa-solid fa-door-open"></i>
+              <span>Criar Pickup de HQ (Entrada)</span>
+            </button>
+            <button class="btn-action-pickup" onclick="sendOrgAction('set_garage_pickup')">
+              <i class="fa-solid fa-warehouse"></i>
+              <span>Criar Pickup de Garagem</span>
+            </button>
+            <button class="btn-action-pickup" onclick="sendOrgAction('set_armory_pickup')">
+              <i class="fa-solid fa-gun"></i>
+              <span>Criar Pickup de Armaria/Baú</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 3: SPAWNS DE VEÍCULOS -->
+      <div id="view-vehicles" style="display: none;">
+        <div class="section-box">
+          <div class="section-title"><i class="fa-solid fa-car-side"></i> Adicionar Veículo de Org no Chão</div>
+          <div class="form-grid">
+            <div class="input-group">
+              <label>ID do Modelo (ex: 596 Police, 522 NRG)</label>
+              <input type="number" id="veh-model" class="input-field" value="596">
+            </div>
+            <div class="input-group">
+              <label>Cor Primária (ID)</label>
+              <input type="number" id="veh-color1" class="input-field" value="1">
+            </div>
+            <div class="input-group">
+              <label>Cor Secundária (ID)</label>
+              <input type="number" id="veh-color2" class="input-field" value="1">
+            </div>
+          </div>
+          <button class="btn-submit" style="margin-top:10px;" onclick="sendOrgAction('add_vehicle_spawn')">
+            <i class="fa-solid fa-map-pin"></i> Setar Spawn de Veículo Aqui
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`tab-${tab}`).classList.add('active');
+
+      document.getElementById('view-create').style.display = tab === 'create' ? 'block' : 'none';
+      document.getElementById('view-edit').style.display = tab === 'edit' ? 'block' : 'none';
+      document.getElementById('view-vehicles').style.display = tab === 'vehicles' ? 'block' : 'none';
+    }
+
+    function showStatus(text) {
+      const banner = document.getElementById('statusBanner');
+      banner.className = 'status-msg success';
+      banner.innerText = text;
+      setTimeout(() => { banner.style.display = 'none'; }, 3000);
+    }
+
+    function submitCreateOrg() {
+      const name = document.getElementById('create-name').value;
+      const tag = document.getElementById('create-tag').value;
+      const type = document.getElementById('create-type').value;
+      const skin = document.getElementById('create-skin').value;
+
+      if(!name || !tag) return alert('Preencha o Nome e a Tag da Org!');
+
+      sendCommand(`org_criar ${name}|${tag}|${type}|${skin}`);
+      showStatus(`Solicitação para criar "${name}" enviada ao servidor!`);
+    }
+
+    function sendOrgAction(action) {
+      const orgId = document.getElementById('edit-org-id').value || 1;
+      if (action === 'add_vehicle_spawn') {
+        const model = document.getElementById('veh-model').value || 596;
+        const c1 = document.getElementById('veh-color1').value || 1;
+        const c2 = document.getElementById('veh-color2').value || 1;
+        sendCommand(`org_veh_add ${orgId}|${model}|${c1}|${c2}`);
+        showStatus(`Spawn de veículo adicionado na sua posição atual!`);
+      } else {
+        sendCommand(`org_pickup ${action}|${orgId}`);
+        showStatus(`Pickup/Posição de Org atualizada na sua posição atual!`);
+      }
+    }
+
+    function closeAdminPanel() {
+      if (window.Android && typeof window.Android.close === 'function') {
+        window.Android.close();
+      }
+    }
+
+    function sendCommand(cmd) {
+      if (window.Android && typeof window.Android.sendCommand === 'function') {
+        window.Android.sendCommand(cmd);
+      } else if (window.CefBrowser && typeof window.CefBrowser.sendEvent === 'function') {
+        window.CefBrowser.sendEvent(20, 1, 'command|' + cmd);
+      }
+    }
+  </script>
+</body>
+</html>
